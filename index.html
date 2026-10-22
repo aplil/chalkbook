@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chalkbook">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ECEFEE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1110" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Chalkbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&display=swap">
+<style>
+/* Layout: iPhone-first training logbook. Chalk-grey ground, white "training card" tables for sets, a sticky tab title, a fixed bottom tab bar, bottom sheets for everything else. One accent (rubber-mat teal) for actions; hold-yellow is kept for XP and levels only. */
+:root {
+  --bg: #ECEFEE;
+  --surface: #FFFFFF;
+  --surface-2: #E1E6E4;
+  --ink: #111614;
+  --ink-2: #4A5550;
+  --ink-3: #7F8A85;
+  --line: #D3DAD7;
+  --accent: #0F6B5C;
+  --accent-ink: #FFFFFF;
+  --accent-wash: #D5EAE5;
+  --xp: #E2A900;
+  --xp-ink: #221A00;
+  --xp-wash: #FBEFC6;
+  --good: #1E7A4C;
+  --good-wash: #DCF0E4;
+  --stop: #B3362D;
+  --stop-wash: #F6DEDB;
+  --c-strength: #3F5BA9;
+  --c-calisthenics: #0F6B5C;
+  --c-mobility: #7A4FB0;
+  --c-conditioning: #BF4A2A;
+  --c-climbing: #A06E05;
+  --bar-bg: rgba(255,255,255,.86);
+  --scrim: rgba(12,18,16,.45);
+  --shadow: 0 1px 2px rgba(17,22,20,.06), 0 6px 20px rgba(17,22,20,.07);
+  --f-display: "Archivo", "Arial Narrow", -apple-system, system-ui, sans-serif;
+  --f-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --tab-h: 62px;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D1110; --surface: #161C1A; --surface-2: #202826; --ink: #EDF2F0; --ink-2: #A8B3AE; --ink-3: #74807B; --line: #29322F;
+    --accent: #5CC9B2; --accent-ink: #03211B; --accent-wash: #11302A; --xp: #F3C63E; --xp-ink: #221A00; --xp-wash: #3A3112;
+    --good: #5FD09A; --good-wash: #14301F; --stop: #F08B80; --stop-wash: #3A1F1C;
+    --c-strength: #8FA6F0; --c-calisthenics: #5CC9B2; --c-mobility: #B999E8; --c-conditioning: #F08B6B; --c-climbing: #E6B54A;
+    --bar-bg: rgba(22,28,26,.86); --scrim: rgba(0,0,0,.6); --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D1110; --surface: #161C1A; --surface-2: #202826; --ink: #EDF2F0; --ink-2: #A8B3AE; --ink-3: #74807B; --line: #29322F;
+  --accent: #5CC9B2; --accent-ink: #03211B; --accent-wash: #11302A; --xp: #F3C63E; --xp-ink: #221A00; --xp-wash: #3A3112;
+  --good: #5FD09A; --good-wash: #14301F; --stop: #F08B80; --stop-wash: #3A1F1C;
+  --c-strength: #8FA6F0; --c-calisthenics: #5CC9B2; --c-mobility: #B999E8; --c-conditioning: #F08B6B; --c-climbing: #E6B54A;
+  --bar-bg: rgba(22,28,26,.86); --scrim: rgba(0,0,0,.6); --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.3);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.45 var(--f-body); -webkit-tap-highlight-color: transparent; }
+body.locked { overflow: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 calc(var(--tab-h) + 96px + env(safe-area-inset-bottom, 0px)); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 12px; padding-block: 14px 10px; }
+.top h1 { margin: 0; flex: 1; font: 800 34px/1 var(--f-display); font-stretch: 78%; letter-spacing: -.01em; text-transform: uppercase; text-wrap: balance; }
+.lvl { display: inline-flex; align-items: center; gap: 6px; border: 0; background: var(--xp-wash); color: var(--ink); border-radius: 999px; padding: 6px 12px 6px 6px; font: 700 14px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.lvl b { display: grid; place-items: center; min-width: 26px; height: 26px; border-radius: 999px; background: var(--xp); color: var(--xp-ink); font-size: 13px; padding: 0 6px; }
+.icon-btn { border: 0; background: var(--surface); width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; box-shadow: var(--shadow); font-size: 22px; line-height: 1; }
+
+/* tab bar */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--bar-bg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tabs-in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.tab { border: 0; background: none; display: grid; justify-items: center; gap: 2px; padding: 6px 0; color: var(--ink-3); font-size: 11px; font-weight: 600; letter-spacing: .02em; }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-current="page"] { color: var(--accent); }
+
+/* common */
+.sec { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 26px 0 10px; font: 700 13px/1.2 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.sec button { border: 0; background: none; color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: 0; text-transform: none; padding: 4px 0; }
+.card { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); }
+.btn { border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 700; background: var(--surface-2); color: var(--ink); min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.danger { background: var(--stop-wash); color: var(--stop); }
+.btn.ghost { background: none; color: var(--accent); }
+.btn.big { width: 100%; min-height: 56px; font-size: 18px; font-family: var(--f-display); font-stretch: 90%; letter-spacing: .01em; }
+.btn:disabled { opacity: .5; }
+.row-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.row-btns .btn { flex: 1 1 140px; }
+.muted { color: var(--ink-3); }
+.small { font-size: 13px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.dot { width: 8px; height: 8px; border-radius: 99px; background: var(--c, var(--ink-3)); flex: none; }
+.cat-strength { --c: var(--c-strength); } .cat-calisthenics { --c: var(--c-calisthenics); } .cat-mobility { --c: var(--c-mobility); } .cat-conditioning { --c: var(--c-conditioning); } .cat-climbing { --c: var(--c-climbing); }
+.pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--ink-2); }
+.pill.good { background: var(--good-wash); color: var(--good); }
+.pill.xp { background: var(--xp-wash); color: var(--ink); }
+.empty { padding: 28px 18px; text-align: center; color: var(--ink-3); }
+.empty strong { display: block; color: var(--ink); font-size: 17px; margin-bottom: 4px; }
+input.f, select.f, textarea.f { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 11px 12px; min-height: 44px; }
+textarea.f { min-height: 96px; resize: vertical; }
+label.lab { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.form { display: grid; gap: 14px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.note { font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; }
+.note.draft { background: var(--xp-wash); color: var(--ink); font-weight: 600; }
+.search { position: relative; }
+.search input { padding-left: 38px; }
+.search svg { position: absolute; left: 12px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--ink-3); }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.fchip { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: 10px; padding: 3px; margin-bottom: 12px; }
+.seg button { border: 0; background: none; border-radius: 8px; padding: 8px; font-weight: 700; font-size: 14px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+/* lists */
+.list { display: grid; }
+.li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: none; text-align: left; width: 100%; border-bottom: 1px solid var(--line); }
+.li:last-child { border-bottom: 0; }
+.li .grow { flex: 1; min-width: 0; }
+.li .t { font-weight: 650; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li .s { font-size: 13px; color: var(--ink-3); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.li .tick { width: 26px; height: 26px; border-radius: 99px; border: 2px solid var(--line); display: grid; place-items: center; flex: none; font-size: 14px; font-weight: 800; }
+.li[aria-pressed="true"] .tick { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chev { color: var(--ink-3); flex: none; }
+
+/* train */
+.routine { padding: 14px; display: grid; gap: 10px; }
+.routine h4 { margin: 0; font: 750 19px/1.15 var(--f-display); font-stretch: 88%; }
+.routine p { margin: 0; font-size: 13px; color: var(--ink-3); }
+.routine .row-btns .btn { min-height: 40px; padding: 8px 12px; flex: 0 1 auto; }
+.stack { display: grid; gap: 12px; }
+
+/* active workout */
+.wk-head { display: grid; gap: 4px; margin-top: 4px; }
+.wk-title { border: 0; background: none; font: 800 24px/1.1 var(--f-display); font-stretch: 85%; padding: 2px 0; width: 100%; }
+.wk-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.wk-meta b { color: var(--ink); }
+.exc { margin-top: 14px; padding: 12px 0 8px; }
+.exc-h { display: flex; align-items: flex-start; gap: 8px; padding: 0 12px 0 14px; }
+.exc-h .name { flex: 1; min-width: 0; border: 0; background: none; text-align: left; padding: 0; }
+.exc-h .name b { display: block; font: 750 18px/1.2 var(--f-display); font-stretch: 90%; color: var(--accent); }
+.exc-h .meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 3px; font-size: 12px; color: var(--ink-3); }
+.more { border: 0; background: var(--surface-2); width: 34px; height: 34px; border-radius: 99px; font-weight: 800; letter-spacing: .05em; flex: none; }
+.exc-note { margin: 8px 14px 4px; width: calc(100% - 28px); border: 0; background: none; font-size: 14px; color: var(--ink-2); padding: 4px 0; }
+.stbl { margin-top: 6px; }
+.srow { display: grid; grid-template-columns: 34px minmax(0, 1fr) var(--cols) 40px; gap: 6px; align-items: center; padding: 5px 10px 5px 8px; }
+.srow.hd { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding-block: 2px; }
+.srow.hd span { text-align: center; }
+.srow.hd span:nth-child(2) { text-align: left; }
+.srow.done { background: var(--good-wash); }
+.stype { border: 0; background: var(--surface-2); border-radius: 8px; height: 32px; font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+.stype.warmup { color: var(--xp-ink); background: var(--xp-wash); }
+.stype.drop { color: var(--c-mobility); }
+.stype.failure { color: var(--stop); }
+.prev { font-size: 13px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prev .side { display: inline-block; border: 0; background: var(--surface-2); color: var(--ink); border-radius: 6px; padding: 1px 6px; margin-right: 4px; font-size: 11px; font-weight: 800; }
+.cells { display: flex; gap: 6px; }
+.cell { width: 100%; min-width: 0; height: 36px; border: 0; border-radius: 8px; background: var(--surface-2); text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; padding: 0 4px; }
+.srow.done .cell { background: transparent; }
+.cell::placeholder { color: var(--ink-3); font-weight: 600; }
+.play { border: 0; background: var(--accent-wash); color: var(--accent); border-radius: 8px; height: 36px; min-width: 34px; font-weight: 800; flex: none; }
+.check { border: 0; background: var(--surface-2); width: 40px; height: 36px; border-radius: 8px; font-weight: 900; font-size: 16px; color: var(--ink-3); }
+.srow.done .check { background: var(--good); color: var(--surface); }
+.exc-f { display: flex; gap: 8px; padding: 8px 12px 2px; }
+.exc-f .btn { min-height: 38px; padding: 6px 12px; font-size: 14px; flex: 1; }
+.exc-f .btn.sm { flex: 0 0 auto; }
+.wk-actions { display: grid; gap: 10px; margin-top: 18px; }
+
+/* rest bar */
+.restbar { position: fixed; left: 0; right: 0; bottom: calc(var(--tab-h) + env(safe-area-inset-bottom, 0px)); z-index: 6; padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)); }
+.restbar-in { max-width: 608px; margin: 0 auto; background: var(--ink); color: var(--bg); border-radius: 14px; padding: 8px 8px 8px 14px; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.restbar-in .fill { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); }
+.restbar-in .lbl { flex: 1; font-size: 13px; font-weight: 600; opacity: .8; }
+.restbar-in .time { font: 800 24px/1 var(--f-display); font-variant-numeric: tabular-nums; min-width: 64px; }
+.restbar-in button { border: 0; background: rgba(127,127,127,.25); color: inherit; border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 14px; }
+
+/* overlays: hold timer + guided player */
+.overlay { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: grid; grid-template-rows: auto 1fr auto; padding: calc(16px + env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
+.ov-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ov-mid { display: grid; place-content: center; text-align: center; gap: 10px; }
+.ov-phase { font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.ov-phase.ready { color: var(--xp); }
+.ov-name { font: 800 30px/1.1 var(--f-display); font-stretch: 85%; text-wrap: balance; margin: 0; }
+.ov-side { font: 700 18px/1 var(--f-display); color: var(--ink-2); }
+.ov-time { font: 800 clamp(84px, 30vw, 150px)/1 var(--f-display); font-stretch: 70%; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.ov-cue { color: var(--ink-2); max-width: 32ch; margin: 0 auto; }
+.ov-next { font-size: 14px; color: var(--ink-3); }
+.ov-prog { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.ov-prog i { display: block; height: 100%; background: var(--accent); }
+.ov-bot { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
+
+/* sheets */
+#sheets { position: fixed; inset: 0; z-index: 20; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 40px - env(safe-area-inset-top, 0px)); background: var(--bg); border-radius: 20px 20px 0 0; display: grid; grid-template-rows: auto 1fr; overflow: hidden; max-width: 640px; margin: 0 auto; }
+.sheet-h { display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; padding: 10px max(12px, env(safe-area-inset-left, 0px)) 8px max(12px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); }
+.sheet-h h2 { margin: 0; text-align: center; font: 750 17px/1.2 var(--f-display); font-stretch: 92%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sheet-h .ghost { border: 0; background: none; color: var(--accent); font-weight: 650; justify-self: start; padding: 8px 4px; }
+.sheet-h .sheet-x { justify-self: end; }
+.sheet-h .sheet-x button { border: 0; background: none; color: var(--accent); font-weight: 800; padding: 8px 4px; }
+.sheet-b { overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 16px; align-content: start; }
+.sheet-b h3 { margin: 0; font: 700 13px/1.2 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.cues { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.kv div { background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+.kv span { display: block; font-size: 12px; color: var(--ink-3); font-weight: 600; }
+.kv b { font: 750 20px/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
+.spark { width: 100%; height: 120px; display: block; }
+
+/* progress */
+.lvl-card { padding: 18px; display: grid; gap: 12px; }
+.lvl-top { display: flex; align-items: center; gap: 16px; }
+.lvl-badge { width: 72px; height: 72px; border-radius: 18px; background: var(--xp); color: var(--xp-ink); display: grid; place-content: center; text-align: center; flex: none; }
+.lvl-badge small { font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+.lvl-badge b { font: 800 34px/1 var(--f-display); font-stretch: 80%; font-variant-numeric: tabular-nums; }
+.bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--xp); border-radius: 99px; }
+.cats { display: grid; gap: 10px; }
+.catrow { display: grid; grid-template-columns: 110px 1fr 46px; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.catrow .bar { height: 6px; }
+.catrow .bar i { background: var(--c); }
+.catrow span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 13px; }
+.streak { padding: 16px; display: grid; gap: 12px; }
+.streak-top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.streak-top b { font: 800 40px/1 var(--f-display); font-stretch: 80%; font-variant-numeric: tabular-nums; }
+.weekdots { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.weekdots i { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); }
+.weekdots i.on { background: var(--accent); }
+.stepper { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-2); border-radius: 10px; padding: 3px; }
+.stepper button { border: 0; background: var(--surface); width: 32px; height: 30px; border-radius: 8px; font-weight: 800; }
+.stepper span { min-width: 28px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ach { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ach div { background: var(--surface); border-radius: 12px; padding: 12px; display: grid; gap: 2px; }
+.ach div.locked { background: transparent; border: 1px dashed var(--line); color: var(--ink-3); }
+.ach b { font-size: 14px; }
+.ach span { font-size: 12px; color: var(--ink-3); }
+.ach .when { color: var(--good); font-weight: 700; }
+.chart { padding: 14px 14px 8px; }
+.chart svg { width: 100%; height: auto; display: block; }
+
+/* ladders */
+.ladder { padding: 14px; display: grid; gap: 10px; }
+.ladder-h { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ladder-h h4 { margin: 0; font: 750 19px/1.15 var(--f-display); font-stretch: 88%; }
+.steps { display: grid; gap: 0; }
+.step { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; border: 0; background: none; text-align: left; padding: 7px 0; position: relative; }
+.step .n { width: 24px; height: 24px; border-radius: 99px; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: var(--surface-2); color: var(--ink-3); position: relative; z-index: 1; }
+.step.past .n { background: var(--accent-wash); color: var(--accent); }
+.step.cur .n { background: var(--accent); color: var(--accent-ink); }
+.step.cur .nm { font-weight: 750; }
+.step .nm { font-size: 15px; }
+.step:not(:last-child)::after { content: ""; position: absolute; left: 11px; top: 30px; height: calc(100% - 22px); width: 2px; background: var(--surface-2); }
+.step .best { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+#toast { position: fixed; left: 50%; translate: -50% 0; bottom: calc(var(--tab-h) + 80px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); opacity: 0; transition: opacity .2s; pointer-events: none; }
+#toast.on { opacity: 1; }
+.celebrate { animation: pop .5s ease-out; }
+@keyframes pop { 0% { transform: scale(.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .celebrate { animation: none; } #toast { transition: none; } }
+@media (max-width: 380px) { .top h1 { font-size: 30px; } .srow { grid-template-columns: 30px minmax(0, .8fr) var(--cols) 38px; gap: 4px; } }
+</style>
+<style>:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: 0; } body { margin: 0; } [hidden] { display: none !important; } img { max-width: 100%; }</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><h1 id="page-title">Train</h1><span id="top-extra"></span></header>
+  <main id="view" aria-live="polite"></main>
+</div>
+<div class="restbar" id="restbar" hidden></div>
+<nav class="tabs" aria-label="Sections"><div class="tabs-in">
+  <button class="tab" data-a="tab" data-tab="train"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Train</button>
+  <button class="tab" data-a="tab" data-tab="library"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h4v14H4zM10 5h4v14h-4zM16.5 5.5l3.5 1-3.4 13-3.6-1"/></svg>Library</button>
+  <button class="tab" data-a="tab" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</button>
+  <button class="tab" data-a="tab" data-tab="more"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>More</button>
+</div></nav>
+<div id="sheets" hidden></div>
+<div id="overlay"></div>
+<div id="toast" role="status"></div>
+<script>
+"use strict";
+const LIB = {"version":1,"exercises":[{"id":"dead-hang","name":"Dead Hang","category":"calisthenics","logType":"duration","primaryMuscles":["forearms","lats"],"secondaryMuscles":["shoulders"],"equipment":"pull-up bar","cues":["Full grip, thumbs around","Shoulders slightly engaged, not shrugged to ears"],"isUnilateral":false,"climbingTransfer":["grip"],"ladderId":"pull-up","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"scapular-pull-up","name":"Scapular Pull-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lower traps","lats"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Arms straight","Pull shoulder blades down and back, then release"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"pull-up","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"flexed-arm-hang","name":"Flexed-Arm Hang","category":"calisthenics","logType":"duration","primaryMuscles":["lats","biceps"],"secondaryMuscles":["forearms"],"equipment":"pull-up bar","cues":["Chin over bar","Squeeze elbows to ribs"],"isUnilateral":false,"climbingTransfer":["lock-off"],"ladderId":"pull-up","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"negative-pull-up","name":"Negative Pull-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Jump to top","Lower over 4-5 s"],"isUnilateral":false,"climbingTransfer":["lock-off"],"ladderId":"pull-up","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"band-assisted-pull-up","name":"Band-Assisted Pull-up","category":"calisthenics","logType":"assisted_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":["rear delts"],"equipment":"band, pull-up bar","cues":["Full range","Use the lightest band that allows clean reps"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"pull-up","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"pull-up","name":"Pull-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":["rear delts","forearms"],"equipment":"pull-up bar","cues":["Start from dead hang","Chest toward bar, no kipping"],"isUnilateral":false,"climbingTransfer":["grip","lock-off"],"ladderId":"pull-up","ladderStep":6,"isCustom":false,"source":null,"notes":null},{"id":"weighted-pull-up","name":"Weighted Pull-up","category":"calisthenics","logType":"weighted_bodyweight","primaryMuscles":["lats","biceps"],"secondaryMuscles":["forearms"],"equipment":"pull-up bar, dip belt","cues":["Same strict form as bodyweight"],"isUnilateral":false,"climbingTransfer":["grip","lock-off"],"ladderId":"pull-up","ladderStep":7,"isCustom":false,"source":null,"notes":null},{"id":"archer-pull-up","name":"Archer Pull-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":["forearms"],"equipment":"pull-up bar","cues":["Pull toward one hand","Other arm stays nearly straight"],"isUnilateral":true,"climbingTransfer":["lock-off"],"ladderId":"pull-up","ladderStep":8,"isCustom":false,"source":null,"notes":null},{"id":"one-arm-pull-up-negative","name":"One-Arm Pull-up Negative","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":["forearms"],"equipment":"pull-up bar","cues":["Lower as slowly as possible","Other hand off the bar"],"isUnilateral":true,"climbingTransfer":["lock-off","grip"],"ladderId":"pull-up","ladderStep":9,"isCustom":false,"source":null,"notes":null},{"id":"incline-push-up","name":"Incline Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","triceps"],"secondaryMuscles":["front delts"],"equipment":"bench","cues":["Body in one straight line"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"push-up","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"knee-push-up","name":"Knee Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","triceps"],"secondaryMuscles":[],"equipment":"none","cues":["Hips in line with knees and shoulders"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"push-up","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"push-up","name":"Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","triceps"],"secondaryMuscles":["front delts","core"],"equipment":"none","cues":["Elbows ~45 degrees","Chest touches floor"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"push-up","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"diamond-push-up","name":"Diamond Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps","chest"],"secondaryMuscles":[],"equipment":"none","cues":["Hands together under chest"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"push-up","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"archer-push-up","name":"Archer Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","triceps"],"secondaryMuscles":[],"equipment":"none","cues":["Shift weight to one arm","Other arm straight"],"isUnilateral":true,"climbingTransfer":[],"ladderId":"push-up","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"pseudo-planche-push-up","name":"Pseudo Planche Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","front delts"],"secondaryMuscles":["biceps","core"],"equipment":"none","cues":["Hands by waist, fingers out","Lean shoulders past hands"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"push-up","ladderStep":6,"isCustom":false,"source":null,"notes":null},{"id":"one-arm-push-up","name":"One-Arm Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["chest","triceps"],"secondaryMuscles":["core"],"equipment":"none","cues":["Wide feet","Resist rotation"],"isUnilateral":true,"climbingTransfer":["core tension"],"ladderId":"push-up","ladderStep":7,"isCustom":false,"source":null,"notes":null},{"id":"bench-dip","name":"Bench Dip","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps"],"secondaryMuscles":["chest"],"equipment":"bench","cues":["Shoulders down","Elbows back, not out"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"dip","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"support-hold","name":"Support Hold","category":"calisthenics","logType":"duration","primaryMuscles":["triceps","shoulders"],"secondaryMuscles":["core"],"equipment":"parallel bars","cues":["Arms locked","Shoulders pushed down"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"dip","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"negative-dip","name":"Negative Dip","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps","chest"],"secondaryMuscles":[],"equipment":"parallel bars","cues":["Lower over 4 s"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"dip","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"parallel-bar-dip","name":"Parallel Bar Dip","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps","chest"],"secondaryMuscles":["front delts"],"equipment":"parallel bars","cues":["Slight forward lean","Shoulder just below elbow"],"isUnilateral":false,"climbingTransfer":["mantle"],"ladderId":"dip","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"weighted-dip","name":"Weighted Dip","category":"calisthenics","logType":"weighted_bodyweight","primaryMuscles":["triceps","chest"],"secondaryMuscles":[],"equipment":"parallel bars, dip belt","cues":["Same depth as bodyweight"],"isUnilateral":false,"climbingTransfer":["mantle"],"ladderId":"dip","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"ring-dip","name":"Ring Dip","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps","chest"],"secondaryMuscles":["stabilisers"],"equipment":"rings","cues":["Rings turned out at top"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"dip","ladderStep":6,"isCustom":false,"source":null,"notes":null},{"id":"explosive-pull-up","name":"Explosive Pull-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Pull chest to bar as fast as possible"],"isUnilateral":false,"climbingTransfer":["dyno"],"ladderId":"muscle-up","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"straight-bar-dip","name":"Straight Bar Dip","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["triceps","chest"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Lean over the bar"],"isUnilateral":false,"climbingTransfer":["mantle"],"ladderId":"muscle-up","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"jumping-muscle-up-negative","name":"Jumping Muscle-up Negative","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","triceps"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Jump over, control the transition down"],"isUnilateral":false,"climbingTransfer":["mantle"],"ladderId":"muscle-up","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"bar-muscle-up","name":"Bar Muscle-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["lats","triceps","chest"],"secondaryMuscles":["core"],"equipment":"pull-up bar","cues":["Pull to waist, not chin","Fast elbow turnover"],"isUnilateral":false,"climbingTransfer":["mantle","dyno"],"ladderId":"muscle-up","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"bodyweight-squat","name":"Bodyweight Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"none","cues":["Full depth, heels down"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"pistol","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"split-squat","name":"Split Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"none","cues":["Back knee to floor"],"isUnilateral":true,"climbingTransfer":["high step"],"ladderId":"pistol","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"box-pistol-squat","name":"Box Pistol Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":["core"],"equipment":"box","cues":["Sit back to box on one leg"],"isUnilateral":true,"climbingTransfer":["high step"],"ladderId":"pistol","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"assisted-pistol-squat","name":"Assisted Pistol Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"pole or TRX","cues":["Hold support lightly"],"isUnilateral":true,"climbingTransfer":["high step"],"ladderId":"pistol","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"pistol-squat","name":"Pistol Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":["core","hip flexors"],"equipment":"none","cues":["Arms forward to counterbalance","Heel stays down"],"isUnilateral":true,"climbingTransfer":["high step","balance"],"ladderId":"pistol","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"shrimp-squat","name":"Shrimp Squat","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"none","cues":["Hold back foot","Knee to floor"],"isUnilateral":true,"climbingTransfer":["balance"],"ladderId":"pistol","ladderStep":6,"isCustom":false,"source":null,"notes":null},{"id":"tuck-sit","name":"Tuck Sit","category":"calisthenics","logType":"duration","primaryMuscles":["hip flexors","abs"],"secondaryMuscles":["triceps"],"equipment":"parallettes or floor","cues":["Push the floor away","Knees to chest"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"l-sit","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"one-leg-l-sit","name":"One-Leg L-sit","category":"calisthenics","logType":"duration","primaryMuscles":["hip flexors","abs"],"secondaryMuscles":[],"equipment":"parallettes","cues":["Alternate legs"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"l-sit","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"l-sit","name":"L-sit","category":"calisthenics","logType":"duration","primaryMuscles":["hip flexors","abs","quads"],"secondaryMuscles":["triceps"],"equipment":"parallettes","cues":["Legs locked, toes pointed","Shoulders depressed"],"isUnilateral":false,"climbingTransfer":["core tension","heel hook"],"ladderId":"l-sit","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"v-sit-progression","name":"V-sit Progression","category":"calisthenics","logType":"duration","primaryMuscles":["hip flexors","abs"],"secondaryMuscles":[],"equipment":"parallettes","cues":["Lift legs higher than horizontal"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"l-sit","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"hanging-knee-raise","name":"Hanging Knee Raise","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["abs","hip flexors"],"secondaryMuscles":["forearms"],"equipment":"pull-up bar","cues":["No swing"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"front-lever","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"tuck-front-lever","name":"Tuck Front Lever","category":"calisthenics","logType":"duration","primaryMuscles":["lats","abs"],"secondaryMuscles":["rear delts"],"equipment":"pull-up bar","cues":["Arms straight","Back flat, hips level with shoulders"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"front-lever","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"advanced-tuck-front-lever","name":"Advanced Tuck Front Lever","category":"calisthenics","logType":"duration","primaryMuscles":["lats","abs"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Flat back, knees away from chest"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"front-lever","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"straddle-front-lever","name":"Straddle Front Lever","category":"calisthenics","logType":"duration","primaryMuscles":["lats","abs"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Wide legs, posterior pelvic tilt"],"isUnilateral":false,"climbingTransfer":["core tension","steep overhang"],"ladderId":"front-lever","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"front-lever","name":"Front Lever","category":"calisthenics","logType":"duration","primaryMuscles":["lats","abs","glutes"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Body straight, horizontal"],"isUnilateral":false,"climbingTransfer":["core tension","steep overhang"],"ladderId":"front-lever","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"pike-hold","name":"Pike Hold","category":"calisthenics","logType":"duration","primaryMuscles":["shoulders"],"secondaryMuscles":["core"],"equipment":"none","cues":["Hips high, push floor away"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"handstand","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"wall-plank-walk","name":"Wall Plank Walk","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["shoulders","core"],"secondaryMuscles":[],"equipment":"wall","cues":["Walk feet up, hands in"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"handstand","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"chest-to-wall-handstand","name":"Chest-to-Wall Handstand","category":"calisthenics","logType":"duration","primaryMuscles":["shoulders","triceps"],"secondaryMuscles":["core"],"equipment":"wall","cues":["Hollow body","Push tall through shoulders"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"handstand","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"freestanding-handstand","name":"Freestanding Handstand","category":"calisthenics","logType":"duration","primaryMuscles":["shoulders"],"secondaryMuscles":["core","forearms"],"equipment":"none","cues":["Balance with fingers"],"isUnilateral":false,"climbingTransfer":["balance"],"ladderId":"handstand","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"pike-push-up","name":"Pike Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["shoulders","triceps"],"secondaryMuscles":[],"equipment":"none","cues":["Head forward of hands at bottom"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"handstand","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"wall-handstand-push-up","name":"Wall Handstand Push-up","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["shoulders","triceps"],"secondaryMuscles":[],"equipment":"wall","cues":["Head to tripod position"],"isUnilateral":false,"climbingTransfer":[],"ladderId":"handstand","ladderStep":6,"isCustom":false,"source":null,"notes":null},{"id":"planche-lean","name":"Planche Lean","category":"calisthenics","logType":"duration","primaryMuscles":["front delts","chest"],"secondaryMuscles":["wrists","core"],"equipment":"none","cues":["Arms locked","Protract shoulders, lean forward"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":"planche","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"frog-stand","name":"Frog Stand","category":"calisthenics","logType":"duration","primaryMuscles":["front delts"],"secondaryMuscles":["wrists"],"equipment":"none","cues":["Knees on elbows"],"isUnilateral":false,"climbingTransfer":["balance"],"ladderId":"planche","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"tuck-planche","name":"Tuck Planche","category":"calisthenics","logType":"duration","primaryMuscles":["front delts","chest"],"secondaryMuscles":["core"],"equipment":"parallettes","cues":["Hips at shoulder height"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"planche","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"advanced-tuck-planche","name":"Advanced Tuck Planche","category":"calisthenics","logType":"duration","primaryMuscles":["front delts","chest"],"secondaryMuscles":[],"equipment":"parallettes","cues":["Flat back"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"planche","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"straddle-planche","name":"Straddle Planche","category":"calisthenics","logType":"duration","primaryMuscles":["front delts","chest"],"secondaryMuscles":[],"equipment":"parallettes","cues":["Legs wide and locked"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"planche","ladderStep":5,"isCustom":false,"source":null,"notes":null},{"id":"dead-bug","name":"Dead Bug","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["abs"],"secondaryMuscles":[],"equipment":"none","cues":["Lower back glued to floor"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"core-tension","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"hollow-body-hold","name":"Hollow Body Hold","category":"calisthenics","logType":"duration","primaryMuscles":["abs"],"secondaryMuscles":["hip flexors"],"equipment":"none","cues":["Low back pressed down","Arms by ears"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"core-tension","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"hollow-body-rock","name":"Hollow Body Rock","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["abs"],"secondaryMuscles":[],"equipment":"none","cues":["Hold shape, rock"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":"core-tension","ladderStep":3,"isCustom":false,"source":null,"notes":null},{"id":"dragon-flag-negative","name":"Dragon Flag Negative","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["abs"],"secondaryMuscles":["lats"],"equipment":"bench","cues":["Straight body, lower slowly"],"isUnilateral":false,"climbingTransfer":["core tension","steep overhang"],"ladderId":"core-tension","ladderStep":4,"isCustom":false,"source":null,"notes":null},{"id":"nordic-curl-negative","name":"Nordic Curl Negative","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["hamstrings"],"secondaryMuscles":[],"equipment":"anchor","cues":["Hips extended","Lower as slow as possible"],"isUnilateral":false,"climbingTransfer":["heel hook"],"ladderId":"nordic","ladderStep":1,"isCustom":false,"source":null,"notes":null},{"id":"nordic-curl","name":"Nordic Curl","category":"calisthenics","logType":"bodyweight_reps","primaryMuscles":["hamstrings"],"secondaryMuscles":[],"equipment":"anchor","cues":["Hips straight throughout"],"isUnilateral":false,"climbingTransfer":["heel hook"],"ladderId":"nordic","ladderStep":2,"isCustom":false,"source":null,"notes":null},{"id":"bayesian-cable-curl","name":"Bayesian Cable Curl","category":"strength","logType":"weight_reps","primaryMuscles":["biceps"],"secondaryMuscles":[],"equipment":"cable","cues":["Step forward so arm is behind body","Full stretch at bottom"],"isUnilateral":true,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"lean-away-cable-lateral-raise","name":"Lean-Away Cable Lateral Raise","category":"strength","logType":"weight_reps","primaryMuscles":["side delts"],"secondaryMuscles":[],"equipment":"cable","cues":["Hold upright and lean away","Lead with elbow"],"isUnilateral":true,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"kelso-shrug","name":"Kelso Shrug","category":"strength","logType":"weight_reps","primaryMuscles":["mid traps","rhomboids"],"secondaryMuscles":[],"equipment":"barbell or dumbbells","cues":["Chest on incline bench","Squeeze shoulder blades"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"deficit-pendlay-row","name":"Deficit Pendlay Row","category":"strength","logType":"weight_reps","primaryMuscles":["lats","upper back"],"secondaryMuscles":[],"equipment":"barbell, plate","cues":["Bar returns to floor each rep"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"pec-deck-rear-delt-fly","name":"Pec Deck Rear Delt Fly","category":"strength","logType":"weight_reps","primaryMuscles":["rear delts"],"secondaryMuscles":[],"equipment":"machine","cues":["Lead with elbows"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"seated-leg-curl","name":"Seated Leg Curl","category":"strength","logType":"weight_reps","primaryMuscles":["hamstrings"],"secondaryMuscles":[],"equipment":"machine","cues":["Lean forward for more stretch"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"deficit-romanian-deadlift","name":"Deficit Romanian Deadlift","category":"strength","logType":"weight_reps","primaryMuscles":["hamstrings","glutes"],"secondaryMuscles":[],"equipment":"barbell, plate","cues":["Push hips back","Bar close to legs"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"smith-machine-hip-thrust","name":"Smith Machine Hip Thrust","category":"strength","logType":"weight_reps","primaryMuscles":["glutes"],"secondaryMuscles":[],"equipment":"smith machine, bench","cues":["Chin tucked","Ribs down"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"long-length-partial-lat-pulldown","name":"Long-Length Partial Lat Pulldown","category":"strength","logType":"weight_reps","primaryMuscles":["lats"],"secondaryMuscles":[],"equipment":"cable","cues":["Stay in the stretched half of the range"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"overhead-cable-triceps-extension","name":"Overhead Cable Triceps Extension","category":"strength","logType":"weight_reps","primaryMuscles":["triceps"],"secondaryMuscles":[],"equipment":"cable","cues":["Deep stretch behind head"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"pendulum-squat","name":"Pendulum Squat","category":"strength","logType":"weight_reps","primaryMuscles":["quads"],"secondaryMuscles":["glutes"],"equipment":"machine","cues":["Full depth"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"trap-bar-deadlift","name":"Trap Bar Deadlift","category":"strength","logType":"weight_reps","primaryMuscles":["quads","glutes","hamstrings"],"secondaryMuscles":["forearms"],"equipment":"trap bar","cues":["Push the floor away"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"farmer-s-carry","name":"Farmer's Carry","category":"strength","logType":"weighted_duration","primaryMuscles":["forearms","traps"],"secondaryMuscles":["core"],"equipment":"dumbbells or handles","cues":["Tall posture, short fast steps"],"isUnilateral":false,"climbingTransfer":["grip"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"weighted-step-up","name":"Weighted Step-up","category":"strength","logType":"weight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"dumbbells, box","cues":["Drive through front heel"],"isUnilateral":true,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"hangboard-repeaters","name":"Hangboard Repeaters","category":"climbing","logType":"weighted_duration","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"hangboard","cues":["7 s on / 3 s off","Half-crimp to start, no full crimp"],"isUnilateral":false,"climbingTransfer":["grip","finger strength"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":"Usually recommended after about a year of regular climbing."},{"id":"max-hang","name":"Max Hang","category":"climbing","logType":"weighted_duration","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"hangboard","cues":["10 s at a hard but clean effort","Shoulders engaged"],"isUnilateral":false,"climbingTransfer":["finger strength"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":"Usually recommended after about a year of regular climbing."},{"id":"no-hang-fingerboard-lift","name":"No-Hang Fingerboard Lift","category":"climbing","logType":"weight_reps","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"lifting edge or block","cues":["Feet on floor, lift with fingers"],"isUnilateral":true,"climbingTransfer":["finger strength"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"pinch-block-lift","name":"Pinch Block Lift","category":"climbing","logType":"weighted_duration","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"pinch block","cues":["Thumb opposing fingers"],"isUnilateral":true,"climbingTransfer":["pinch grip"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"wrist-roller","name":"Wrist Roller","category":"climbing","logType":"weight_reps","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"wrist roller","cues":["Arms out, roll up and down slowly"],"isUnilateral":false,"climbingTransfer":["grip"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"reverse-wrist-curl","name":"Reverse Wrist Curl","category":"climbing","logType":"weight_reps","primaryMuscles":["forearms"],"secondaryMuscles":[],"equipment":"dumbbell","cues":["Slow lowering"],"isUnilateral":false,"climbingTransfer":["elbow health"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"lock-off-hold","name":"Lock-off Hold","category":"climbing","logType":"weighted_duration","primaryMuscles":["lats","biceps"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Hold at 90 degrees and at full lock"],"isUnilateral":false,"climbingTransfer":["lock-off"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"typewriter-pull-up","name":"Typewriter Pull-up","category":"climbing","logType":"bodyweight_reps","primaryMuscles":["lats","biceps"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Traverse side to side at the top"],"isUnilateral":false,"climbingTransfer":["lock-off"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"toes-to-bar","name":"Toes-to-Bar","category":"climbing","logType":"bodyweight_reps","primaryMuscles":["abs","hip flexors"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Controlled, no big swing"],"isUnilateral":false,"climbingTransfer":["core tension","toe hook"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"windshield-wiper","name":"Windshield Wiper","category":"climbing","logType":"bodyweight_reps","primaryMuscles":["obliques","abs"],"secondaryMuscles":[],"equipment":"pull-up bar","cues":["Legs vertical, rotate side to side"],"isUnilateral":false,"climbingTransfer":["core tension"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"campus-ladder","name":"Campus Ladder","category":"climbing","logType":"bodyweight_reps","primaryMuscles":["forearms","lats"],"secondaryMuscles":[],"equipment":"campus board","cues":["Match or skip rungs"],"isUnilateral":false,"climbingTransfer":["power","dyno"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":"Advanced climbers only."},{"id":"y-t-w-raise","name":"Y-T-W Raise","category":"climbing","logType":"weight_reps","primaryMuscles":["lower traps","rotator cuff"],"secondaryMuscles":[],"equipment":"light dumbbells","cues":["Chest on incline bench","Thumbs up"],"isUnilateral":false,"climbingTransfer":["shoulder stability"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"cable-external-rotation","name":"Cable External Rotation","category":"climbing","logType":"weight_reps","primaryMuscles":["rotator cuff"],"secondaryMuscles":[],"equipment":"band or cable","cues":["Elbow pinned to side"],"isUnilateral":true,"climbingTransfer":["shoulder stability"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"turkish-get-up","name":"Turkish Get-up","category":"climbing","logType":"weight_reps","primaryMuscles":["shoulders","core"],"secondaryMuscles":[],"equipment":"kettlebell","cues":["Eyes on the bell","Slow and controlled"],"isUnilateral":true,"climbingTransfer":["shoulder stability","body positioning"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"copenhagen-plank","name":"Copenhagen Plank","category":"climbing","logType":"duration","primaryMuscles":["adductors"],"secondaryMuscles":[],"equipment":"bench","cues":["Top leg on bench","Hips lifted"],"isUnilateral":true,"climbingTransfer":["stemming"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"couch-stretch","name":"Couch Stretch","category":"mobility","logType":"duration","primaryMuscles":["hip flexors","quads"],"secondaryMuscles":[],"equipment":"wall or couch","cues":["Squeeze glute of back leg","Tall torso"],"isUnilateral":true,"climbingTransfer":["high step"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"90-90-hip-switch","name":"90/90 Hip Switch","category":"mobility","logType":"duration","primaryMuscles":["hips"],"secondaryMuscles":[],"equipment":"none","cues":["Sit tall, rotate knees side to side"],"isUnilateral":false,"climbingTransfer":["drop knee"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"pigeon-stretch","name":"Pigeon Stretch","category":"mobility","logType":"duration","primaryMuscles":["glutes","hips"],"secondaryMuscles":[],"equipment":"none","cues":["Square hips"],"isUnilateral":true,"climbingTransfer":["hip mobility"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"frog-stretch","name":"Frog Stretch","category":"mobility","logType":"duration","primaryMuscles":["adductors"],"secondaryMuscles":[],"equipment":"none","cues":["Knees wide, shift hips back"],"isUnilateral":false,"climbingTransfer":["stemming"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"seated-pancake-stretch","name":"Seated Pancake Stretch","category":"mobility","logType":"duration","primaryMuscles":["adductors","hamstrings"],"secondaryMuscles":[],"equipment":"none","cues":["Hinge from hips, flat back"],"isUnilateral":false,"climbingTransfer":["hip mobility"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"standing-pike-stretch","name":"Standing Pike Stretch","category":"mobility","logType":"duration","primaryMuscles":["hamstrings"],"secondaryMuscles":[],"equipment":"none","cues":["Soft knees to start","Let head hang"],"isUnilateral":false,"climbingTransfer":["toe-touch goal"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"jefferson-curl","name":"Jefferson Curl","category":"mobility","logType":"duration","primaryMuscles":["hamstrings","spine"],"secondaryMuscles":[],"equipment":"light weight","cues":["Roll down one vertebra at a time","Start very light"],"isUnilateral":false,"climbingTransfer":["toe-touch goal"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"half-kneeling-hamstring-stretch","name":"Half-Kneeling Hamstring Stretch","category":"mobility","logType":"duration","primaryMuscles":["hamstrings"],"secondaryMuscles":[],"equipment":"none","cues":["Flat back, hinge forward"],"isUnilateral":true,"climbingTransfer":["toe-touch goal","heel hook"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"deep-squat-hold","name":"Deep Squat Hold","category":"mobility","logType":"duration","primaryMuscles":["hips","ankles"],"secondaryMuscles":[],"equipment":"none","cues":["Heels down, chest up","Hold something if needed"],"isUnilateral":false,"climbingTransfer":["hip mobility"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"cossack-squat","name":"Cossack Squat","category":"mobility","logType":"duration","primaryMuscles":["adductors","hips"],"secondaryMuscles":[],"equipment":"none","cues":["Straight leg, toes up"],"isUnilateral":true,"climbingTransfer":["drop knee","stemming"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"knee-to-wall-ankle-mobilisation","name":"Knee-to-Wall Ankle Mobilisation","category":"mobility","logType":"duration","primaryMuscles":["ankles"],"secondaryMuscles":[],"equipment":"wall","cues":["Heel down, knee over toes"],"isUnilateral":true,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"thoracic-extension-on-foam-roller","name":"Thoracic Extension on Foam Roller","category":"mobility","logType":"duration","primaryMuscles":["upper back"],"secondaryMuscles":[],"equipment":"foam roller","cues":["Hands behind head, breathe out over roller"],"isUnilateral":false,"climbingTransfer":["overhead reach"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"open-book","name":"Open Book","category":"mobility","logType":"duration","primaryMuscles":["upper back"],"secondaryMuscles":[],"equipment":"none","cues":["Knees stacked, follow hand with eyes"],"isUnilateral":true,"climbingTransfer":["overhead reach"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"doorway-pec-stretch","name":"Doorway Pec Stretch","category":"mobility","logType":"duration","primaryMuscles":["chest","front delts"],"secondaryMuscles":[],"equipment":"doorway","cues":["Elbow at shoulder height"],"isUnilateral":true,"climbingTransfer":["shoulder health"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"band-shoulder-pass-through","name":"Band Shoulder Pass-through","category":"mobility","logType":"duration","primaryMuscles":["shoulders"],"secondaryMuscles":[],"equipment":"band or stick","cues":["Wide grip, arms straight"],"isUnilateral":false,"climbingTransfer":["shoulder health"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"wall-slide","name":"Wall Slide","category":"mobility","logType":"duration","primaryMuscles":["shoulders","lower traps"],"secondaryMuscles":[],"equipment":"wall","cues":["Back and arms on wall"],"isUnilateral":false,"climbingTransfer":["overhead reach"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"wrist-warm-up-flow","name":"Wrist Warm-up Flow","category":"mobility","logType":"duration","primaryMuscles":["wrists","forearms"],"secondaryMuscles":[],"equipment":"none","cues":["Palms down, up, side to side","Rock gently"],"isUnilateral":false,"climbingTransfer":["finger health"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"cat-cow","name":"Cat-Cow","category":"mobility","logType":"duration","primaryMuscles":["spine"],"secondaryMuscles":[],"equipment":"none","cues":["Move with breath"],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"world-s-greatest-stretch","name":"World's Greatest Stretch","category":"mobility","logType":"duration","primaryMuscles":["hips","upper back","hamstrings"],"secondaryMuscles":[],"equipment":"none","cues":["Elbow to instep, then rotate"],"isUnilateral":true,"climbingTransfer":["hip mobility"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"child-s-pose-with-lat-reach","name":"Child's Pose with Lat Reach","category":"mobility","logType":"duration","primaryMuscles":["lats"],"secondaryMuscles":[],"equipment":"none","cues":["Walk hands to one side"],"isUnilateral":true,"climbingTransfer":["overhead reach"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"puppy-dog-stretch","name":"Puppy Dog Stretch","category":"mobility","logType":"duration","primaryMuscles":["shoulders","lats"],"secondaryMuscles":[],"equipment":"none","cues":["Hips over knees, chest toward floor"],"isUnilateral":false,"climbingTransfer":["overhead reach"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"butterfly-stretch","name":"Butterfly Stretch","category":"mobility","logType":"duration","primaryMuscles":["adductors"],"secondaryMuscles":[],"equipment":"none","cues":["Soles together, sit tall"],"isUnilateral":false,"climbingTransfer":["hip mobility"],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"run","name":"Run","category":"conditioning","logType":"distance_duration","primaryMuscles":["legs"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"rowing-machine","name":"Rowing Machine","category":"conditioning","logType":"distance_duration","primaryMuscles":["full body"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"assault-bike","name":"Assault Bike","category":"conditioning","logType":"distance_duration","primaryMuscles":["full body"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"sled-push","name":"Sled Push","category":"conditioning","logType":"distance_duration","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"burpee","name":"Burpee","category":"conditioning","logType":"bodyweight_reps","primaryMuscles":["full body"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"kettlebell-swing","name":"Kettlebell Swing","category":"conditioning","logType":"weight_reps","primaryMuscles":["glutes","hamstrings"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"jump-rope","name":"Jump Rope","category":"conditioning","logType":"duration","primaryMuscles":["calves"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"box-jump","name":"Box Jump","category":"conditioning","logType":"bodyweight_reps","primaryMuscles":["quads","glutes"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"wall-ball","name":"Wall Ball","category":"conditioning","logType":"weight_reps","primaryMuscles":["quads","shoulders"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null},{"id":"sandbag-carry","name":"Sandbag Carry","category":"conditioning","logType":"distance_duration","primaryMuscles":["full body","forearms"],"secondaryMuscles":[],"equipment":"varies","cues":[],"isUnilateral":false,"climbingTransfer":[],"ladderId":null,"ladderStep":null,"isCustom":false,"source":null,"notes":null}],"ladders":[{"id":"pull-up","name":"Pull-up","graduationTarget":"3x8 strict reps (holds: 3x20s) on two sessions","steps":["dead-hang","scapular-pull-up","flexed-arm-hang","negative-pull-up","band-assisted-pull-up","pull-up","weighted-pull-up","archer-pull-up","one-arm-pull-up-negative"]},{"id":"push-up","name":"Push-up","graduationTarget":"3x12 clean reps on two sessions","steps":["incline-push-up","knee-push-up","push-up","diamond-push-up","archer-push-up","pseudo-planche-push-up","one-arm-push-up"]},{"id":"dip","name":"Dip","graduationTarget":"3x10 reps on two sessions","steps":["bench-dip","support-hold","negative-dip","parallel-bar-dip","weighted-dip","ring-dip"]},{"id":"muscle-up","name":"Muscle-up","graduationTarget":"3 clean reps on two sessions","steps":["explosive-pull-up","straight-bar-dip","jumping-muscle-up-negative","bar-muscle-up"]},{"id":"pistol","name":"Pistol Squat","graduationTarget":"3x6 each side on two sessions","steps":["bodyweight-squat","split-squat","box-pistol-squat","assisted-pistol-squat","pistol-squat","shrimp-squat"]},{"id":"l-sit","name":"L-sit","graduationTarget":"3x20s holds on two sessions","steps":["tuck-sit","one-leg-l-sit","l-sit","v-sit-progression"]},{"id":"front-lever","name":"Front Lever","graduationTarget":"3x10s holds on two sessions","steps":["hanging-knee-raise","tuck-front-lever","advanced-tuck-front-lever","straddle-front-lever","front-lever"]},{"id":"handstand","name":"Handstand","graduationTarget":"60s total quality holds on two sessions","steps":["pike-hold","wall-plank-walk","chest-to-wall-handstand","freestanding-handstand","pike-push-up","wall-handstand-push-up"]},{"id":"planche","name":"Planche","graduationTarget":"3x10s holds on two sessions","steps":["planche-lean","frog-stand","tuck-planche","advanced-tuck-planche","straddle-planche"]},{"id":"core-tension","name":"Core Tension","graduationTarget":"3x30s holds on two sessions","steps":["dead-bug","hollow-body-hold","hollow-body-rock","dragon-flag-negative"]},{"id":"nordic","name":"Nordic Curl","graduationTarget":"3x5 on two sessions","steps":["nordic-curl-negative","nordic-curl"]}],"routines":[{"id":"daily-10-min","name":"Daily 10-min Full Body","items":[{"exerciseId":"cat-cow","seconds":60,"perSide":false},{"exerciseId":"world-s-greatest-stretch","seconds":45,"perSide":true},{"exerciseId":"couch-stretch","seconds":45,"perSide":true},{"exerciseId":"standing-pike-stretch","seconds":60,"perSide":false},{"exerciseId":"deep-squat-hold","seconds":60,"perSide":false},{"exerciseId":"thoracic-extension-on-foam-roller","seconds":60,"perSide":false},{"exerciseId":"wrist-warm-up-flow","seconds":60,"perSide":false}],"type":"mobility"},{"id":"hips-hamstrings","name":"Hips & Hamstrings (toe-touch goal)","items":[{"exerciseId":"half-kneeling-hamstring-stretch","seconds":45,"perSide":true},{"exerciseId":"standing-pike-stretch","seconds":60,"perSide":false},{"exerciseId":"pigeon-stretch","seconds":60,"perSide":true},{"exerciseId":"frog-stretch","seconds":60,"perSide":false},{"exerciseId":"seated-pancake-stretch","seconds":60,"perSide":false},{"exerciseId":"couch-stretch","seconds":60,"perSide":true},{"exerciseId":"jefferson-curl","seconds":60,"perSide":false}],"type":"mobility"},{"id":"shoulders-wrists","name":"Shoulders & Wrists (handstands/climbing)","items":[{"exerciseId":"wrist-warm-up-flow","seconds":90,"perSide":false},{"exerciseId":"band-shoulder-pass-through","seconds":60,"perSide":false},{"exerciseId":"wall-slide","seconds":60,"perSide":false},{"exerciseId":"doorway-pec-stretch","seconds":45,"perSide":true},{"exerciseId":"puppy-dog-stretch","seconds":60,"perSide":false},{"exerciseId":"open-book","seconds":45,"perSide":true},{"exerciseId":"child-s-pose-with-lat-reach","seconds":45,"perSide":true}],"type":"mobility"}]};
+const APP_VERSION = 1;
+
+// ---------- helpers ----------
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const num = v => { const n = parseFloat(String(v ?? "").replace(",", ".")); return isFinite(n) ? n : null; };
+const round = (n, d = 1) => Math.round(n * 10 ** d) / 10 ** d;
+const CATS = { strength: "Strength", calisthenics: "Calisthenics", mobility: "Mobility", conditioning: "Conditioning", climbing: "Climbing" };
+const LOGTYPES = { weight_reps: "Weight × reps", bodyweight_reps: "Bodyweight reps", assisted_reps: "Assisted reps", weighted_bodyweight: "Added weight × reps", duration: "Hold / timed", weighted_duration: "Added weight × time", distance_duration: "Distance + time" };
+const SET_TYPES = ["normal", "warmup", "drop", "failure"];
+const GRAD = { "pull-up": { sets: 3, reps: 8, secs: 20 }, "push-up": { sets: 3, reps: 12, secs: 30 }, dip: { sets: 3, reps: 10, secs: 30 }, "muscle-up": { sets: 1, reps: 3, secs: 10 }, pistol: { sets: 3, reps: 6, secs: 20 }, "l-sit": { sets: 3, reps: 10, secs: 20 }, "front-lever": { sets: 3, reps: 8, secs: 10 }, handstand: { sets: 3, reps: 8, secs: 20 }, planche: { sets: 3, reps: 8, secs: 10 }, "core-tension": { sets: 3, reps: 10, secs: 30 }, nordic: { sets: 3, reps: 5, secs: 10 } };
+const isTimed = lt => lt === "duration" || lt === "weighted_duration";
+function fields(lt) {
+  switch (lt) {
+    case "weight_reps": return [["kg", "kg"], ["reps", "Reps"]];
+    case "assisted_reps": return [["kg", "Assist kg"], ["reps", "Reps"]];
+    case "weighted_bodyweight": return [["kg", "+kg"], ["reps", "Reps"]];
+    case "duration": return [["secs", "Secs"]];
+    case "weighted_duration": return [["kg", "+kg"], ["secs", "Secs"]];
+    case "distance_duration": return [["dist", "km"], ["mins", "Min"]];
+    default: return [["reps", "Reps"]];
+  }
+}
+const fmtSecs = s => { s = Math.round(+s || 0); if (s < 60) return s + "s"; const m = Math.floor(s / 60), r = s % 60; return m + ":" + String(r).padStart(2, "0"); };
+const clock = s => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s / 60), r = s % 60; return m + ":" + String(r).padStart(2, "0"); };
+function fmtSet(s, lt) {
+  if (!s) return "";
+  const kg = s.kg != null && s.kg !== "" ? round(+s.kg, 2) : null;
+  switch (lt) {
+    case "weight_reps": return kg != null || s.reps ? `${kg ?? 0}kg × ${s.reps ?? 0}` : "";
+    case "assisted_reps": return s.reps ? `${s.reps}${kg ? ` (−${kg}kg)` : ""}` : "";
+    case "weighted_bodyweight": return s.reps ? `${kg ? `+${kg}kg × ` : ""}${s.reps}` : "";
+    case "duration": return s.secs ? fmtSecs(s.secs) : "";
+    case "weighted_duration": return s.secs ? `${kg ? `+${kg}kg · ` : ""}${fmtSecs(s.secs)}` : "";
+    case "distance_duration": return [s.dist ? round(+s.dist, 2) + "km" : "", s.secs ? fmtSecs(s.secs) : ""].filter(Boolean).join(" · ");
+    default: return s.reps ? `${s.reps} reps` : "";
+  }
+}
+const dayFmt = t => new Date(t).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
+const dateFmt = t => new Date(t).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2600); }
+
+// ---------- sound / wake ----------
+let actx;
+function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {} }
+function beep(freq = 880, ms = 160, vol = .18) {
+  try { if (!actx) return; const o = actx.createOscillator(), g = actx.createGain(); o.type = "sine"; o.frequency.value = freq; g.gain.setValueAtTime(vol, actx.currentTime); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + ms / 1000); o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + ms / 1000 + .02); } catch {}
+}
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && !wakeLock && navigator.wakeLock) { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener?.("release", () => { wakeLock = null; }); }
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch {}
+}
+
+// ---------- storage ----------
+const DB = {
+  db: null,
+  open() { return new Promise(res => { try { const r = indexedDB.open("chalkbook", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => { this.db = r.result; res(); }; r.onerror = () => res(); r.onblocked = () => res(); } catch { res(); } }); },
+  get(k) { return new Promise(res => { if (!this.db) return res(null); try { const q = this.db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result ?? null); q.onerror = () => res(null); } catch { res(null); } }); },
+  set(k, v) { return new Promise(res => { if (!this.db) return res(false); try { const t = this.db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = () => res(true); t.onerror = () => res(false); t.onabort = () => res(false); } catch { res(false); } }); }
+};
+function freshState() { return { v: APP_VERSION, libVersion: 0, exercises: {}, routines: [], workouts: [], settings: { weeklyTarget: 3, rest: 90 }, ladderPos: {}, hevyMap: {}, active: null }; }
+let S = freshState();
+let statsCache = null, saveT = null, warnedSave = false;
+function save() { statsCache = null; clearTimeout(saveT); saveT = setTimeout(persist, 250); }
+async function persist() {
+  const json = JSON.stringify(S);
+  let ok = await DB.set("state", json);
+  if (!ok) { try { localStorage.setItem("chalkbook.state", json); ok = true; } catch {} }
+  if (!ok && !warnedSave) { warnedSave = true; toast("Couldn't save on this device. Export a backup from More."); }
+}
+async function load() {
+  await DB.open();
+  let raw = await DB.get("state");
+  if (!raw) { try { raw = localStorage.getItem("chalkbook.state"); } catch {} }
+  if (raw) { try { const d = JSON.parse(raw); S = Object.assign(freshState(), d); S.settings = Object.assign(freshState().settings, d.settings || {}); } catch {} }
+  mergeLibrary();
+  try { navigator.storage?.persist?.(); } catch {}
+}
+function mergeLibrary() {
+  if ((S.libVersion || 0) >= LIB.version) return;
+  for (const e of LIB.exercises) { const cur = S.exercises[e.id]; if (!cur || (!cur.edited && !cur.isCustom)) S.exercises[e.id] = { ...e }; }
+  if (!S.routines.length) {
+    S.routines = LIB.routines.map(r => ({ id: r.id, name: r.name, type: "mobility", items: r.items.map(i => ({ exerciseId: i.exerciseId, sets: 1, secs: i.seconds, perSide: !!i.perSide })) }));
+    S.routines.unshift({ id: "example-pull-climb", name: "Example: Pull & Climb Strength", type: "workout", items: [
+      { exerciseId: "pull-up", sets: 3, reps: 8, rest: 120 }, { exerciseId: "tuck-front-lever", sets: 3, secs: 10, rest: 90 }, { exerciseId: "lock-off-hold", sets: 3, secs: 10, rest: 90 },
+      { exerciseId: "farmer-s-carry", sets: 3, secs: 40, rest: 90 }, { exerciseId: "y-t-w-raise", sets: 2, reps: 10, rest: 60 }] });
+  }
+  S.libVersion = LIB.version;
+  save();
+}
+const ex = id => S.exercises[id] || { id, name: "Unknown exercise", category: "strength", logType: "weight_reps", primaryMuscles: [], secondaryMuscles: [], cues: [], climbingTransfer: [] };
+const allExercises = () => Object.values(S.exercises).sort((a, b) => a.name.localeCompare(b.name));
+
+// ---------- stats, XP, PRs, achievements ----------
+const T = L => 50 * L * (L - 1);
+function levelOf(xp) { const L = Math.max(1, Math.floor((1 + Math.sqrt(1 + 4 * xp / 50)) / 2)); return { level: L, into: xp - T(L), need: T(L + 1) - T(L) }; }
+function setXP(s, lt, cat) {
+  let x;
+  if (isTimed(lt)) { const secs = +s.secs || 0; x = cat === "mobility" ? Math.round(secs / 60 * 8) : Math.min(25, Math.round(secs / 5)); if (s.kg) x += 3; x = Math.max(x, 2); }
+  else if (lt === "distance_duration") { x = Math.max(3, Math.round((+s.secs || 0) / 60) + Math.round((+s.dist || 0) * 5)); }
+  else { x = 5 + Math.min(10, Math.round((+s.reps || 0) / 2)); if (lt === "weighted_bodyweight" && s.kg) x += 3; }
+  if (s.rpe >= 8) x += 2;
+  if (s.t === "warmup") x = Math.round(x / 2);
+  return x;
+}
+function metrics(s, lt) {
+  const kg = +s.kg || 0, reps = +s.reps || 0, secs = +s.secs || 0, dist = +s.dist || 0, m = {};
+  if (lt === "weight_reps") { if (reps >= 1 && kg > 0) { m.kg = kg; if (reps <= 12) m.e1rm = round(kg * (1 + reps / 30), 1); } }
+  else if (lt === "weighted_bodyweight") { if (reps >= 1 && kg > 0) m.kg = kg; if (reps) m.reps = reps; }
+  else if (lt === "bodyweight_reps" || lt === "assisted_reps") { if (reps) m.reps = reps; }
+  else if (isTimed(lt)) { if (secs) m.secs = secs; if (lt === "weighted_duration" && kg) m.kg = kg; }
+  else if (lt === "distance_duration") { if (dist) m.dist = dist; }
+  return m;
+}
+const METRIC_LABEL = { kg: "Heaviest", e1rm: "Best est. 1RM", reps: "Most reps", secs: "Longest", dist: "Farthest" };
+const fmtMetric = (k, v) => k === "secs" ? fmtSecs(v) : k === "dist" ? round(v, 2) + " km" : k === "reps" ? v + " reps" : round(v, 1) + " kg";
+const ACH = [
+  { id: "first", name: "First session", desc: "Log your first workout", t: c => c.count >= 1 },
+  { id: "w10", name: "Ten deep", desc: "10 workouts", t: c => c.count >= 10 },
+  { id: "w50", name: "Half century", desc: "50 workouts", t: c => c.count >= 50 },
+  { id: "w100", name: "Centurion", desc: "100 workouts", t: c => c.count >= 100 },
+  { id: "w250", name: "Lifer", desc: "250 workouts", t: c => c.count >= 250 },
+  { id: "pr10", name: "Record breaker", desc: "10 personal records", t: c => c.prs >= 10 },
+  { id: "pr50", name: "Chasing numbers", desc: "50 personal records", t: c => c.prs >= 50 },
+  { id: "streak4", name: "Month of momentum", desc: "4-week streak", t: c => c.bestStreak >= 4 },
+  { id: "streak12", name: "Quarter strong", desc: "12-week streak", t: c => c.bestStreak >= 12 },
+  { id: "hold10", name: "Time under tension", desc: "10 min of holds", t: c => c.holdSecs >= 600 },
+  { id: "hold60", name: "Hour of holds", desc: "60 min of holds", t: c => c.holdSecs >= 3600 },
+  { id: "mob10", name: "Loosening up", desc: "10 sessions with mobility", t: c => c.mob >= 10 },
+  { id: "mob30", name: "Bendy era", desc: "30 sessions with mobility", t: c => c.mob >= 30 },
+  { id: "climb50", name: "Wall ready", desc: "50 climbing-strength sets", t: c => (c.catSets.climbing || 0) >= 50 },
+  { id: "pullup", name: "First strict pull-up", desc: "Log a pull-up", t: c => c.flag.pullup },
+  { id: "lsit10", name: "10 s L-sit", desc: "Hold an L-sit for 10 s", t: c => c.flag.lsit10 },
+  { id: "tfl10", name: "Tuck lever", desc: "10 s tuck front lever", t: c => c.flag.tfl10 },
+  { id: "hs30", name: "Balanced", desc: "30 s freestanding handstand", t: c => c.flag.hs30 },
+  { id: "pistol", name: "Pistol packing", desc: "Log a pistol squat", t: c => c.flag.pistol },
+  { id: "mu", name: "Over the bar", desc: "Log a bar muscle-up", t: c => c.flag.mu },
+  { id: "lvl10", name: "Level 10", desc: "Reach level 10", t: c => levelOf(c.xp).level >= 10 },
+  { id: "lvl25", name: "Level 25", desc: "Reach level 25", t: c => levelOf(c.xp).level >= 25 }
+];
+function weekKey(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return d.getTime(); }
+function prevWeek(k) { const d = new Date(k); d.setDate(d.getDate() - 7); return d.getTime(); }
+function streakEnding(weeks, k, target) { let n = 0; while ((weeks[k] || 0) >= target) { n++; k = prevWeek(k); } return n; }
+function stats() {
+  if (statsCache) return statsCache;
+  const target = S.settings.weeklyTarget || 3;
+  const c = { xp: 0, cat: {}, best: {}, prs: 0, count: 0, holdSecs: 0, mob: 0, catSets: {}, flag: {}, weeks: {}, bestStreak: 0, unlocked: {}, wxp: {}, wprs: {} };
+  const seen = new Set();
+  const ws = [...S.workouts].sort((a, b) => a.start - b.start);
+  for (const w of ws) {
+    let wxp = 25, hasMob = false; const prMap = {};
+    for (const we of w.exercises) {
+      const e = ex(we.exerciseId), lt = e.logType, cat = e.category;
+      const b = c.best[e.id] || (c.best[e.id] = {});
+      for (const s of we.sets) {
+        if (!s.done) continue;
+        const x = setXP(s, lt, cat); wxp += x; c.cat[cat] = (c.cat[cat] || 0) + x; c.catSets[cat] = (c.catSets[cat] || 0) + 1;
+        if (cat === "mobility") hasMob = true;
+        if (isTimed(lt) && cat !== "mobility") c.holdSecs += +s.secs || 0;
+        const m = metrics(s, lt);
+        for (const k in m) if (m[k] > (b[k] || 0)) { if (seen.has(e.id) && s.t !== "warmup") prMap[e.id + "|" + k] = { ex: e.id, k, v: m[k] }; b[k] = m[k]; b[k + "At"] = w.start; }
+        const reps = +s.reps || 0, secs = +s.secs || 0;
+        if ((e.id === "pull-up" || e.id === "weighted-pull-up") && reps >= 1) c.flag.pullup = true;
+        if (e.id === "l-sit" && secs >= 10) c.flag.lsit10 = true;
+        if (e.id === "tuck-front-lever" && secs >= 10) c.flag.tfl10 = true;
+        if (e.id === "freestanding-handstand" && secs >= 30) c.flag.hs30 = true;
+        if (e.id === "pistol-squat" && reps >= 1) c.flag.pistol = true;
+        if (e.id === "bar-muscle-up" && reps >= 1) c.flag.mu = true;
+      }
+    }
+    for (const we of w.exercises) if (we.sets.some(s => s.done)) seen.add(we.exerciseId);
+    const prs = Object.values(prMap); c.prs += prs.length; wxp += prs.length * 15;
+    c.wxp[w.id] = wxp; c.wprs[w.id] = prs; c.xp += wxp; c.count++; if (hasMob) c.mob++;
+    const k = weekKey(w.start); c.weeks[k] = (c.weeks[k] || 0) + 1;
+    c.bestStreak = Math.max(c.bestStreak, streakEnding(c.weeks, k, target));
+    for (const a of ACH) if (!c.unlocked[a.id] && a.t(c)) c.unlocked[a.id] = w.start;
+  }
+  const now = weekKey(Date.now());
+  c.thisWeek = c.weeks[now] || 0;
+  c.streak = (c.thisWeek >= target ? 1 : 0) + streakEnding(c.weeks, prevWeek(now), target);
+  statsCache = c; return c;
+}
+function lastSetsFor(exId, excludeId) {
+  let best = null;
+  for (const w of S.workouts) { if (w.id === excludeId) continue; if (best && w.start <= best.start) continue; const we = w.exercises.find(x => x.exerciseId === exId && x.sets.some(s => s.done)); if (we) best = { start: w.start, sets: we.sets.filter(s => s.done) }; }
+  return best ? best.sets : [];
+}
+function ladderState(L) {
+  const g = GRAD[L.id] || { sets: 3, reps: 8, secs: 20 }; const st = stats();
+  let pos = S.ladderPos[L.id];
+  if (!pos) { pos = 1; L.steps.forEach((id, i) => { if (st.best[id] && Object.keys(st.best[id]).length) pos = i + 1; }); }
+  const curId = L.steps[pos - 1], timed = isTimed(ex(curId).logType); let q = 0;
+  for (const w of S.workouts) for (const we of w.exercises) {
+    if (we.exerciseId !== curId) continue;
+    const n = we.sets.filter(s => s.done && s.t !== "warmup" && (timed ? (+s.secs || 0) >= g.secs : (+s.reps || 0) >= g.reps)).length;
+    if (n >= g.sets) q++;
+  }
+  return { pos, curId, timed, q, g, ready: q >= 2 && pos < L.steps.length, done: q >= 2 && pos === L.steps.length };
+}
+const gradText = (g, timed) => `${g.sets}×${timed ? g.secs + "s" : g.reps}`;
+
+// ---------- capabilities (Claude artifact) ----------
+let sampleFn = null, downloadsApi = null;
+(async () => {
+  if (!window.claude?.use) return;
+  try { sampleFn = await window.claude.use("sample"); } catch {}
+  try { downloadsApi = await window.claude.use("downloads"); } catch {}
+  if (sheets.length) drawSheets();
+})();
+
+// ---------- UI state ----------
+const UI = { tab: "train", libSeg: "exercises", q: "", cat: "all", climb: false };
+try { const t = localStorage.getItem("chalkbook.tab"); if (["train", "library", "progress", "more"].includes(t)) UI.tab = t; } catch {}
+
+// ---------- render: shell ----------
+function render() {
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-current", b.dataset.tab === UI.tab ? "page" : "false"));
+  const st = stats(), lv = levelOf(st.xp).level;
+  const titles = { train: S.active ? "Workout" : "Train", library: "Library", progress: "Progress", more: "More" };
+  $("#page-title").textContent = titles[UI.tab];
+  $("#top-extra").innerHTML = UI.tab === "library"
+    ? `<button class="icon-btn" data-a="lib-add" aria-label="Add exercise">+</button>`
+    : `<button class="lvl" data-a="tab" data-tab="progress" aria-label="Level ${lv}"><b>${lv}</b>LVL</button>`;
+  const v = $("#view");
+  v.innerHTML = UI.tab === "train" ? (S.active ? viewWorkout() : viewTrain()) : UI.tab === "library" ? viewLibrary() : UI.tab === "progress" ? viewProgress() : viewMore();
+  renderRest();
+}
+
+// ---------- train ----------
+function viewTrain() {
+  const recent = [...S.workouts].sort((a, b) => b.start - a.start).slice(0, 4);
+  const st = stats();
+  return `
+  <div class="stack" style="margin-top:6px">
+    <button class="btn primary big" data-a="start-empty">Start empty workout</button>
+  </div>
+  <h3 class="sec">Routines <button data-a="routine-new">New routine</button></h3>
+  <div class="stack">${S.routines.map(r => `
+    <div class="card routine">
+      <div><h4>${esc(r.name)}</h4><p>${r.type === "mobility" ? "Guided mobility · " : ""}${esc(r.items.map(i => ex(i.exerciseId).name).join(", "))}</p></div>
+      <div class="row-btns">
+        <button class="btn primary" data-a="routine-start" data-id="${r.id}">${r.type === "mobility" ? "Start guided" : "Start"}</button>
+        ${r.type === "mobility" ? `<button class="btn" data-a="routine-log" data-id="${r.id}">Log manually</button>` : ""}
+        <button class="btn" data-a="routine-edit" data-id="${r.id}">Edit</button>
+      </div>
+    </div>`).join("") || `<div class="card empty"><strong>No routines yet</strong>Save a workout as a routine, or tap New routine.</div>`}
+  </div>
+  <h3 class="sec">Recent ${recent.length ? `<button data-a="tab" data-tab="progress">All history</button>` : ""}</h3>
+  ${recent.length ? `<div class="card list">${recent.map(w => histRow(w, st)).join("")}</div>` : `<div class="card empty"><strong>Nothing logged yet</strong>Start a workout, or import your Hevy history from More.</div>`}`;
+}
+function histRow(w, st) {
+  const sets = w.exercises.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0);
+  const mins = w.end ? Math.round((w.end - w.start) / 60000) : 0;
+  return `<button class="li" data-a="hist-open" data-id="${w.id}"><span class="grow"><span class="t">${esc(w.title || "Workout")}</span><span class="s">${dayFmt(w.start)} · ${mins ? mins + " min · " : ""}${sets} ${sets === 1 ? "set" : "sets"}${w.source === "hevy" ? " · Hevy" : ""}</span></span><span class="pill xp">+${st.wxp[w.id] || 0} XP</span></button>`;
+}
+
+// ---------- active workout ----------
+function newWorkout(title, items = []) {
+  S.active = { id: uid(), title: title || defaultTitle(), start: Date.now(), notes: "", exercises: [] };
+  for (const it of items) addExerciseToActive(it.exerciseId, it);
+  save(); UI.tab = "train"; render(); keepAwake(true); window.scrollTo(0, 0);
+}
+function defaultTitle() { const h = new Date().getHours(); return (h < 11 ? "Morning" : h < 17 ? "Afternoon" : "Evening") + " session"; }
+function addExerciseToActive(exId, it = {}) {
+  const prev = lastSetsFor(exId, S.active.id);
+  const n = it.sets || Math.max(1, Math.min(prev.length || 3, 6));
+  const sets = [];
+  for (let i = 0; i < n; i++) sets.push({ t: "normal", kg: null, reps: null, secs: null, dist: null, side: null, done: false });
+  S.active.exercises.push({ exerciseId: exId, sets, rest: it.rest ?? (ex(exId).category === "mobility" ? 0 : S.settings.rest), note: "", target: { reps: it.reps || null, secs: it.secs || null } });
+}
+function placeholderFor(we, si, f, prev) {
+  const p = prev[si] || prev[prev.length - 1];
+  if (f === "mins") { if (p?.secs) return round(p.secs / 60, 1); return ""; }
+  if (p && p[f] != null && p[f] !== "") return round(+p[f], 2);
+  if (f === "reps" && we.target?.reps) return we.target.reps;
+  if (f === "secs" && we.target?.secs) return we.target.secs;
+  return "";
+}
+function viewWorkout() {
+  const w = S.active;
+  const done = w.exercises.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0);
+  return `
+  <div class="wk-head">
+    <input class="wk-title" id="wk-title" data-w="title" value="${esc(w.title)}" aria-label="Workout name">
+    <div class="wk-meta"><span>Time <b data-elapsed>${clock((Date.now() - w.start) / 1000)}</b></span><span>Sets <b>${done}</b></span><span>Volume <b>${Math.round(volumeOf(w))} kg</b></span></div>
+  </div>
+  ${w.exercises.map((we, ei) => exCard(we, ei)).join("") || `<div class="card empty" style="margin-top:14px"><strong>Empty workout</strong>Add your first exercise to start logging.</div>`}
+  <div class="wk-actions">
+    <button class="btn primary big" data-a="pick-for-workout">Add exercise</button>
+    <div class="row-btns"><button class="btn" data-a="wk-finish">Finish workout</button><button class="btn danger" data-a="wk-discard">Discard</button></div>
+  </div>`;
+}
+function volumeOf(w) { let v = 0; for (const we of w.exercises) { if (ex(we.exerciseId).logType !== "weight_reps") continue; for (const s of we.sets) if (s.done) v += (+s.kg || 0) * (+s.reps || 0); } return v; }
+function exCard(we, ei) {
+  const e = ex(we.exerciseId), lt = e.logType, fs = fields(lt), prev = lastSetsFor(e.id, S.active.id), timed = isTimed(lt);
+  const cols = fs.map(() => "minmax(0,1fr)").join(" ") + (timed ? " 34px" : "");
+  return `<section class="card exc" style="--cols:${cols}">
+    <div class="exc-h">
+      <button class="name" data-a="ex-open" data-id="${e.id}"><b>${esc(e.name)}</b><span class="meta"><span class="chip cat-${e.category}"><span class="dot"></span>${CATS[e.category] || ""}</span>${we.rest ? `<span>Rest ${fmtSecs(we.rest)}</span>` : `<span>No rest timer</span>`}${e.isUnilateral ? "<span>Each side</span>" : ""}</span></button>
+      <button class="more" data-a="ex-menu" data-ei="${ei}" aria-label="Options for ${esc(e.name)}">···</button>
+    </div>
+    <input class="exc-note" data-note="${ei}" placeholder="Add a note" value="${esc(we.note)}" aria-label="Note for ${esc(e.name)}">
+    <div class="stbl">
+      <div class="srow hd"><span>Set</span><span>Previous</span>${fs.map(f => `<span>${f[1]}</span>`).join("")}${timed ? "<span></span>" : ""}<span>✓</span></div>
+      ${we.sets.map((s, si) => {
+        const label = s.t === "warmup" ? "W" : s.t === "drop" ? "D" : s.t === "failure" ? "F" : String(we.sets.slice(0, si + 1).filter(x => x.t !== "warmup").length);
+        const pv = prev[si] ? fmtSet(prev[si], lt) : "—";
+        return `<div class="srow ${s.done ? "done" : ""}">
+          <button class="stype ${s.t}" data-a="set-type" data-ei="${ei}" data-si="${si}" aria-label="Set type">${label}</button>
+          <span class="prev">${e.isUnilateral ? `<button class="side" data-a="set-side" data-ei="${ei}" data-si="${si}" aria-label="Side">${s.side || "L+R"}</button>` : ""}${esc(pv)}</span>
+          ${fs.map(([f, lab]) => { const val = f === "mins" ? (s.secs != null ? round(s.secs / 60, 2) : "") : (s[f] ?? ""); return `<input class="cell" data-ei="${ei}" data-si="${si}" data-f="${f}" inputmode="${f === "reps" || f === "secs" ? "numeric" : "decimal"}" value="${esc(val)}" placeholder="${esc(placeholderFor(we, si, f, prev))}" aria-label="${lab} set ${si + 1}">`; }).join("")}
+          ${timed ? `<button class="play" data-a="hold" data-ei="${ei}" data-si="${si}" aria-label="Start hold timer">▶</button>` : ""}
+          <button class="check" data-a="set-done" data-ei="${ei}" data-si="${si}" aria-label="Complete set ${si + 1}">✓</button>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="exc-f"><button class="btn" data-a="set-add" data-ei="${ei}">+ Add set</button><button class="btn sm" data-a="set-del" data-ei="${ei}" aria-label="Delete last set">− Set</button></div>
+  </section>`;
+}
+function completeSet(ei, si, fromHold) {
+  const we = S.active.exercises[ei], s = we.sets[si], e = ex(we.exerciseId), prev = lastSetsFor(e.id, S.active.id);
+  if (s.done && !fromHold) { s.done = false; save(); render(); return; }
+  for (const [f] of fields(e.logType)) {
+    if (f === "mins") { if (s.secs == null) { const p = num(placeholderFor(we, si, f, prev)); if (p != null) s.secs = Math.round(p * 60); } continue; }
+    if (s[f] == null || s[f] === "") { const p = num(placeholderFor(we, si, f, prev)); if (p != null) s[f] = p; }
+  }
+  const hasValue = fields(e.logType).some(([f]) => f === "mins" ? s.secs != null : s[f] != null);
+  if (!hasValue) { toast("Enter a number first, then tick the set."); return; }
+  s.done = true; unlockAudio();
+  if (we.rest > 0) startRest(we.rest, e.name);
+  save(); render();
+}
+function startRest(secs, name) { S.active.rest = { end: Date.now() + secs * 1000, total: secs, name, beeped: false }; }
+function renderRest() {
+  const bar = $("#restbar"), r = S.active?.rest;
+  if (!r || UI.tab !== "train") { bar.hidden = true; return; }
+  const left = (r.end - Date.now()) / 1000;
+  bar.hidden = false;
+  bar.innerHTML = `<div class="restbar-in"><span class="time" data-rest>${clock(left)}</span><span class="lbl">Rest · ${esc(r.name)}</span><button data-a="rest-adj" data-d="-15">−15</button><button data-a="rest-adj" data-d="15">+15</button><button data-a="rest-skip">Skip</button><i class="fill" style="width:${Math.max(0, Math.min(100, left / r.total * 100))}%"></i></div>`;
+}
+function tick() {
+  const w = S.active; if (!w) return;
+  const el = $("[data-elapsed]"); if (el) el.textContent = clock((Date.now() - w.start) / 1000);
+  const r = w.rest;
+  if (r) {
+    const left = (r.end - Date.now()) / 1000;
+    if (left <= 0) { if (!r.beeped) { beep(988, 180); setTimeout(() => beep(1318, 260), 220); toast("Rest's up. Next set."); } w.rest = null; save(); renderRest(); return; }
+    const t = $("[data-rest]"); if (t) t.textContent = clock(left);
+    const f = $(".restbar .fill"); if (f) f.style.width = Math.max(0, left / r.total * 100) + "%";
+  }
+}
+setInterval(() => { tick(); tickOverlay(); }, 250);
+
+async function finishWorkout() {
+  const w = S.active;
+  for (const we of w.exercises) we.sets = we.sets.filter(s => s.done);
+  w.exercises = w.exercises.filter(we => we.sets.length);
+  if (!w.exercises.length) {
+    if (await confirmSheet("No completed sets", "Tick at least one set to save this workout. Discard it instead?", "Discard workout", true)) { S.active = null; save(); keepAwake(false); render(); }
+    return;
+  }
+  const before = stats(); const beforeLv = levelOf(before.xp).level; const beforeUnl = { ...before.unlocked };
+  w.end = Date.now(); delete w.rest;
+  S.workouts.push(w); S.active = null; save(); statsCache = null; keepAwake(false);
+  const after = stats();
+  showSummary(w, before, beforeLv, beforeUnl, after);
+  render();
+}
+function showSummary(w, before, beforeLv, beforeUnl, after) {
+  const lvNow = levelOf(after.xp), newAch = ACH.filter(a => after.unlocked[a.id] && !beforeUnl[a.id]);
+  const prs = after.wprs[w.id] || [];
+  const holds = w.exercises.reduce((n, we) => isTimed(ex(we.exerciseId).logType) ? n + we.sets.reduce((m, s) => m + (+s.secs || 0), 0) : n, 0);
+  const sets = w.exercises.reduce((n, we) => n + we.sets.length, 0);
+  openSheet({ title: "Workout saved", render: () => `
+    <div class="card lvl-card celebrate">
+      <div class="lvl-top"><div class="lvl-badge"><small>LEVEL</small><b>${lvNow.level}</b></div><div style="flex:1;min-width:0"><div style="font:800 26px/1 var(--f-display)">+${after.wxp[w.id]} XP</div><div class="muted small">${lvNow.level > beforeLv ? `Level up! You reached level ${lvNow.level}.` : `${lvNow.need - lvNow.into} XP to level ${lvNow.level + 1}`}</div></div></div>
+      <div class="bar"><i style="width:${lvNow.into / lvNow.need * 100}%"></i></div>
+    </div>
+    <div class="kv"><div><span>Duration</span><b>${fmtSecs((w.end - w.start) / 1000)}</b></div><div><span>Sets</span><b>${sets}</b></div><div><span>Volume</span><b>${Math.round(volumeOf(w))} kg</b></div><div><span>Hold time</span><b>${fmtSecs(holds)}</b></div></div>
+    ${prs.length ? `<h3>Personal records</h3><div class="card list">${prs.map(p => `<div class="li"><span class="grow"><span class="t">${esc(ex(p.ex).name)}</span><span class="s">${METRIC_LABEL[p.k]}</span></span><span class="pill good">${fmtMetric(p.k, p.v)}</span></div>`).join("")}</div>` : ""}
+    ${newAch.length ? `<h3>Achievements unlocked</h3><div class="ach">${newAch.map(a => `<div class="celebrate"><b>${esc(a.name)}</b><span>${esc(a.desc)}</span></div>`).join("")}</div>` : ""}
+    <div class="row-btns"><button class="btn" data-a="wk-save-routine" data-id="${w.id}">Save as routine</button><button class="btn primary" data-a="sheet-close">Done</button></div>` });
+}
+
+// ---------- hold timer + guided mobility ----------
+let OV = null;
+function openHold(ei, si) {
+  const we = S.active.exercises[ei], e = ex(we.exerciseId), s = we.sets[si], prev = lastSetsFor(e.id, S.active.id);
+  const target = num(s.secs) || num(placeholderFor(we, si, "secs", prev)) || 30;
+  unlockAudio(); keepAwake(true);
+  OV = { kind: "hold", ei, si, name: e.name, cue: e.cues?.[0] || "", target, phase: "ready", phaseEnd: Date.now() + 3000, start: null, beeped: false };
+  drawOverlay();
+}
+function startGuided(r) {
+  const steps = [];
+  for (const it of r.items) { const e = ex(it.exerciseId); const sides = it.perSide || e.isUnilateral ? ["Left", "Right"] : [null]; for (let k = 0; k < (it.sets || 1); k++) for (const side of sides) steps.push({ exId: e.id, side, secs: it.secs || 45 }); }
+  if (!steps.length) { toast("Add exercises to this routine first."); return; }
+  unlockAudio(); keepAwake(true);
+  OV = { kind: "guided", routine: r, steps, i: 0, phase: "ready", phaseEnd: Date.now() + 5000, paused: null, start: Date.now(), log: [] };
+  drawOverlay();
+}
+function drawOverlay() {
+  const root = $("#overlay");
+  if (!OV) { root.innerHTML = ""; document.body.classList.remove("locked"); return; }
+  document.body.classList.add("locked");
+  if (OV.kind === "hold") {
+    root.innerHTML = `<div class="overlay" role="dialog" aria-label="Hold timer">
+      <div class="ov-top"><span class="pill">Target ${fmtSecs(OV.target)}</span><button class="btn ghost" data-a="ov-cancel">Cancel</button></div>
+      <div class="ov-mid"><div class="ov-phase" data-ov-phase></div><h2 class="ov-name">${esc(OV.name)}</h2><div class="ov-time" data-ov-time></div>${OV.cue ? `<p class="ov-cue">${esc(OV.cue)}</p>` : ""}</div>
+      <div class="ov-bot" style="grid-template-columns:1fr"><button class="btn primary big" data-a="hold-done">Stop & log</button></div></div>`;
+  } else {
+    root.innerHTML = `<div class="overlay" role="dialog" aria-label="Guided mobility">
+      <div class="ov-top"><span class="pill" data-ov-count></span><button class="btn ghost" data-a="ov-cancel">End</button></div>
+      <div class="ov-mid"><div class="ov-phase" data-ov-phase></div><h2 class="ov-name" data-ov-name></h2><div class="ov-side" data-ov-side></div><div class="ov-time" data-ov-time></div><p class="ov-cue" data-ov-cue></p><div class="ov-next" data-ov-next></div><div class="ov-prog"><i data-ov-prog></i></div></div>
+      <div class="ov-bot"><button class="btn" data-a="gd-back">Back</button><button class="btn primary" data-a="gd-pause" data-ov-pause>Pause</button><button class="btn" data-a="gd-skip">Skip</button></div></div>`;
+  }
+  tickOverlay();
+}
+function tickOverlay() {
+  if (!OV) return;
+  const now = Date.now(), set = (sel, txt) => { const el = $(sel); if (el && el.textContent !== txt) el.textContent = txt; };
+  if (OV.kind === "hold") {
+    if (OV.phase === "ready") { const left = (OV.phaseEnd - now) / 1000; set("[data-ov-phase]", "Get ready"); $("[data-ov-phase]")?.classList.add("ready"); set("[data-ov-time]", String(Math.max(1, Math.ceil(left)))); if (left <= 0) { OV.phase = "hold"; OV.start = now; beep(1046, 200); $("[data-ov-phase]")?.classList.remove("ready"); } return; }
+    const el = (now - OV.start) / 1000;
+    set("[data-ov-phase]", el >= OV.target ? "Target hit, keep going" : "Hold"); set("[data-ov-time]", clock(el).replace(/^0:/, ""));
+    if (el >= OV.target && !OV.beeped) { OV.beeped = true; beep(988, 160); setTimeout(() => beep(1318, 300), 200); }
+    return;
+  }
+  const st = OV.steps[OV.i]; if (!st) return;
+  const e = ex(st.exId), paused = OV.paused != null;
+  const left = ((paused ? OV.paused : OV.phaseEnd) - (paused ? 0 : now)) / 1000;
+  set("[data-ov-count]", `${OV.i + 1} of ${OV.steps.length}`);
+  set("[data-ov-phase]", paused ? "Paused" : OV.phase === "ready" ? (st.side === "Right" && OV.steps[OV.i - 1]?.exId === st.exId ? "Switch sides" : "Get ready") : "Hold");
+  $("[data-ov-phase]")?.classList.toggle("ready", OV.phase === "ready");
+  set("[data-ov-name]", e.name); set("[data-ov-side]", st.side ? st.side + " side" : ""); set("[data-ov-cue]", e.cues?.[0] || "");
+  set("[data-ov-time]", clock(left));
+  const nx = OV.steps[OV.i + 1]; set("[data-ov-next]", nx ? `Next: ${ex(nx.exId).name}${nx.side ? " (" + nx.side.toLowerCase() + ")" : ""}` : "Last one");
+  set("[data-ov-pause]", paused ? "Resume" : "Pause");
+  const pg = $("[data-ov-prog]"); if (pg) pg.style.width = (OV.i / OV.steps.length * 100) + "%";
+  if (paused) return;
+  if (OV.phase === "hold" && left <= 3.05 && left > 0 && OV.lastBeep !== Math.ceil(left)) { OV.lastBeep = Math.ceil(left); beep(660, 90, .12); }
+  if (left <= 0) {
+    if (OV.phase === "ready") { OV.phase = "hold"; OV.phaseEnd = now + st.secs * 1000; beep(1046, 200); }
+    else { OV.log.push(OV.i); gdNext(); }
+  }
+}
+function gdNext() {
+  OV.i++;
+  if (OV.i >= OV.steps.length) { beep(988, 160); setTimeout(() => beep(1318, 160), 180); setTimeout(() => beep(1568, 320), 360); finishGuided(); return; }
+  OV.phase = "ready"; OV.phaseEnd = Date.now() + (OV.steps[OV.i].side === "Right" && OV.steps[OV.i - 1]?.exId === OV.steps[OV.i].exId ? 4000 : 6000); OV.lastBeep = null;
+}
+function finishGuided() {
+  const o = OV; OV = null; drawOverlay(); keepAwake(false);
+  const doneIdx = new Set(o.log); const exs = [];
+  o.steps.forEach((st, i) => { if (!doneIdx.has(i)) return; let we = exs.find(x => x.exerciseId === st.exId); if (!we) exs.push(we = { exerciseId: st.exId, sets: [], rest: 0, note: "" }); we.sets.push({ t: "normal", secs: st.secs, side: st.side ? st.side[0] : null, done: true }); });
+  if (!exs.length) { toast("Nothing completed, so nothing was logged."); return; }
+  const before = stats(), beforeLv = levelOf(before.xp).level, beforeUnl = { ...before.unlocked };
+  const w = { id: uid(), title: o.routine.name, start: o.start, end: Date.now(), notes: "", exercises: exs, routineId: o.routine.id };
+  S.workouts.push(w); save(); statsCache = null;
+  showSummary(w, before, beforeLv, beforeUnl, stats()); render();
+}
+
+// ---------- library ----------
+function filteredExercises() {
+  const q = UI.q.trim().toLowerCase();
+  return allExercises().filter(e => (UI.cat === "all" || e.category === UI.cat || (UI.cat === "custom" && e.isCustom)) && (!UI.climb || e.climbingTransfer?.length) &&
+    (!q || (e.name + " " + (e.primaryMuscles || []).join(" ") + " " + (e.equipment || "") + " " + (e.climbingTransfer || []).join(" ")).toLowerCase().includes(q)));
+}
+function viewLibrary() {
+  return `<div class="seg" role="group" aria-label="Library view"><button data-a="lib-seg" data-seg="exercises" aria-pressed="${UI.libSeg === "exercises"}">Exercises</button><button data-a="lib-seg" data-seg="ladders" aria-pressed="${UI.libSeg === "ladders"}">Progressions</button></div>
+  ${UI.libSeg === "ladders" ? viewLadders() : `
+  <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input class="f" id="lib-q" type="search" placeholder="Search name, muscle, equipment" value="${esc(UI.q)}" aria-label="Search exercises"></div>
+  ${catChips(UI.cat, UI.climb, "lib")}
+  <div class="card list" id="lib-list" style="margin-top:8px">${libRows(filteredExercises(), "ex-open")}</div>`}`;
+}
+function catChips(cur, climb, scope) {
+  const opts = [["all", "All"], ...Object.entries(CATS), ["custom", "Mine"]];
+  return `<div class="chips" role="group" aria-label="Filter by category">${opts.map(([k, l]) => `<button class="fchip ${k !== "all" && k !== "custom" ? "cat-" + k : ""}" data-a="${scope}-cat" data-cat="${k}" aria-pressed="${cur === k}">${k !== "all" && k !== "custom" ? '<span class="dot"></span>' : ""}${l}</button>`).join("")}<button class="fchip" data-a="${scope}-climb" aria-pressed="${climb}">Climbing transfer</button></div>`;
+}
+function libRows(list, act, picked) {
+  if (!list.length) return `<div class="empty"><strong>No matches</strong>Try another word, or add it as your own exercise with +.</div>`;
+  return list.map(e => `<button class="li" data-a="${act}" data-id="${e.id}" ${picked ? `aria-pressed="${picked.has(e.id)}"` : ""}><span class="dot cat-${e.category}"></span><span class="grow"><span class="t">${esc(e.name)}</span><span class="s">${esc([LOGTYPES[e.logType], (e.primaryMuscles || []).slice(0, 2).join(", "), e.isCustom ? "Mine" : ""].filter(Boolean).join(" · "))}</span></span>${picked ? `<span class="tick">✓</span>` : `<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg>`}</button>`).join("");
+}
+function viewLadders() {
+  return `<div class="stack">${LIB.ladders.map(L => {
+    const ls = ladderState(L), st = stats();
+    return `<section class="card ladder"><div class="ladder-h"><h4>${esc(L.name)}</h4>${ls.ready ? `<span class="pill good">Ready to move up</span>` : ls.done ? `<span class="pill good">Ladder complete</span>` : `<span class="pill">Goal ${gradText(ls.g, ls.timed)} · ${ls.q}/2 sessions</span>`}</div>
+      <div class="steps">${L.steps.map((id, i) => { const e = ex(id), b = st.best[id] || {}; const bk = ["secs", "reps", "kg"].find(k => b[k]); return `<button class="step ${i + 1 < ls.pos ? "past" : i + 1 === ls.pos ? "cur" : ""}" data-a="ladder-set" data-l="${L.id}" data-p="${i + 1}"><span class="n">${i + 1}</span><span class="nm">${esc(e.name)}</span><span class="best">${bk ? fmtMetric(bk, b[bk]) : ""}</span></button>`; }).join("")}</div>
+      <p class="muted small" style="margin:0">Tap a step to mark where you are. Move up after ${gradText(ls.g, ls.timed)} on two separate days.</p></section>`;
+  }).join("")}</div>`;
+}
+function exerciseDetail(id) {
+  const e = ex(id), st = stats(), b = st.best[id] || {};
+  const hist = S.workouts.filter(w => w.exercises.some(x => x.exerciseId === id && x.sets.some(s => s.done))).sort((a, c) => c.start - a.start);
+  const key = e.logType === "weight_reps" ? "e1rm" : isTimed(e.logType) ? "secs" : e.logType === "distance_duration" ? "dist" : e.logType === "weighted_bodyweight" && b.kg ? "kg" : "reps";
+  const pts = hist.slice(0, 30).reverse().map(w => { let m = 0; for (const we of w.exercises) if (we.exerciseId === id) for (const s of we.sets) if (s.done) m = Math.max(m, metrics(s, e.logType)[key] || 0); return { t: w.start, v: m }; }).filter(p => p.v > 0);
+  const ladder = LIB.ladders.find(L => L.steps.includes(id));
+  return `
+  <div class="chip cat-${e.category}"><span class="dot"></span>${CATS[e.category]} · ${LOGTYPES[e.logType]}${e.isUnilateral ? " · each side" : ""}${e.isCustom ? " · Mine" : ""}</div>
+  ${["kg", "e1rm", "reps", "secs", "dist"].some(k => b[k]) ? `<div class="kv">${["kg", "e1rm", "reps", "secs", "dist"].filter(k => b[k]).map(k => `<div><span>${METRIC_LABEL[k]}</span><b>${fmtMetric(k, b[k])}</b></div>`).join("")}</div>` : ""}
+  ${pts.length > 1 ? `<div class="card chart">${sparkline(pts, key)}</div>` : ""}
+  ${e.cues?.length ? `<div><h3>Cues</h3><ul class="cues" style="margin-top:8px">${e.cues.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div>` : ""}
+  <div class="kv">
+    ${e.primaryMuscles?.length ? `<div><span>Main muscles</span>${esc(e.primaryMuscles.join(", "))}</div>` : ""}
+    ${e.secondaryMuscles?.length ? `<div><span>Also works</span>${esc(e.secondaryMuscles.join(", "))}</div>` : ""}
+    ${e.equipment ? `<div><span>Equipment</span>${esc(e.equipment)}</div>` : ""}
+    ${e.climbingTransfer?.length ? `<div><span>Climbing transfer</span>${esc(e.climbingTransfer.join(", "))}</div>` : ""}
+  </div>
+  ${ladder ? `<div class="note">Step ${ladder.steps.indexOf(id) + 1} of ${ladder.steps.length} in the ${esc(ladder.name)} progression.</div>` : ""}
+  ${e.notes ? `<div class="note">${esc(e.notes)}</div>` : ""}
+  ${e.source ? `<div class="note">Source: ${/^https?:\/\//.test(e.source) ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${esc(e.source)}</a>` : esc(e.source)}</div>` : ""}
+  ${hist.length ? `<div><h3>History</h3><div class="card list" style="margin-top:8px">${hist.slice(0, 8).map(w => { const we = w.exercises.find(x => x.exerciseId === id); return `<div class="li"><span class="grow"><span class="t">${dayFmt(w.start)}</span><span class="s">${esc(we.sets.filter(s => s.done).map(s => fmtSet(s, e.logType)).join(" · "))}</span></span></div>`; }).join("")}</div></div>` : `<p class="muted" style="margin:0">Not logged yet.</p>`}
+  <div class="row-btns">${S.active ? `<button class="btn primary" data-a="ex-add-active" data-id="${id}">Add to workout</button>` : ""}<button class="btn" data-a="ex-edit" data-id="${id}">Edit</button><button class="btn" data-a="ex-dup" data-id="${id}">Duplicate</button>${e.isCustom ? `<button class="btn danger" data-a="ex-del" data-id="${id}">Delete</button>` : ""}</div>`;
+}
+function sparkline(pts, key) {
+  const W = 320, H = 120, pl = 8, pr = 52, pt = 12, pb = 18;
+  const vs = pts.map(p => p.v), lo = Math.min(...vs), hi = Math.max(...vs), span = hi - lo || 1;
+  const x = i => pl + i * (W - pl - pr) / Math.max(1, pts.length - 1), y = v => pt + (1 - (v - lo) / span) * (H - pt - pb);
+  const line = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
+  const area = `${line}L${x(pts.length - 1).toFixed(1)},${H - pb}L${pl},${H - pb}Z`;
+  const last = pts[pts.length - 1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${METRIC_LABEL[key]} over the last ${pts.length} sessions">
+    <line x1="${pl}" x2="${W - pr}" y1="${y(hi)}" y2="${y(hi)}" stroke="var(--line)" stroke-dasharray="3 4"/><line x1="${pl}" x2="${W - pr}" y1="${y(lo)}" y2="${y(lo)}" stroke="var(--line)" stroke-dasharray="3 4"/>
+    <path d="${area}" fill="var(--accent-wash)"/><path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${x(pts.length - 1)}" cy="${y(last.v)}" r="4" fill="var(--accent)"/>
+    <text x="${W - pr + 6}" y="${y(hi) + 4}" font-size="11" fill="var(--ink-2)" font-weight="700">${fmtMetric(key, hi)}</text>
+    ${hi !== lo ? `<text x="${W - pr + 6}" y="${y(lo) + 4}" font-size="11" fill="var(--ink-3)">${fmtMetric(key, lo)}</text>` : ""}
+    <text x="${pl}" y="${H - 3}" font-size="10" fill="var(--ink-3)">${dateFmt(pts[0].t)}</text><text x="${W - pr}" y="${H - 3}" font-size="10" fill="var(--ink-3)" text-anchor="end">${dateFmt(last.t)}</text>
+  </svg>`;
+}
+
+// ---------- exercise form ----------
+function exerciseForm(draft, opts = {}) {
+  const d = draft;
+  openSheet({ title: opts.title || (d.id && S.exercises[d.id] ? "Edit exercise" : "New exercise"), data: d,
+    action: `<button data-a="exf-save">Save</button>`,
+    render: () => `<div class="form">
+      ${opts.aiDraft ? `<div class="note draft">AI draft. Check every field before saving. Claude can't watch the video, so it guessed from the title and your notes.</div>` : ""}
+      <label class="lab" for="exf-name">Name<input class="f" id="exf-name" data-ff="name" value="${esc(d.name)}" placeholder="e.g. Lean-away cable lateral raise"></label>
+      <div class="grid2">
+        <label class="lab" for="exf-cat">Category<select class="f" id="exf-cat" data-ff="category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${d.category === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+        <label class="lab" for="exf-lt">How you log it<select class="f" id="exf-lt" data-ff="logType">${Object.entries(LOGTYPES).map(([k, l]) => `<option value="${k}" ${d.logType === k ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      </div>
+      <label class="lab" for="exf-pm">Main muscles<input class="f" id="exf-pm" data-ff="primaryMuscles" data-list value="${esc((d.primaryMuscles || []).join(", "))}" placeholder="comma separated"></label>
+      <label class="lab" for="exf-sm">Also works<input class="f" id="exf-sm" data-ff="secondaryMuscles" data-list value="${esc((d.secondaryMuscles || []).join(", "))}"></label>
+      <label class="lab" for="exf-eq">Equipment<input class="f" id="exf-eq" data-ff="equipment" value="${esc(d.equipment)}"></label>
+      <label class="lab" for="exf-cues">Cues (one per line)<textarea class="f" id="exf-cues" data-ff="cues" data-lines>${esc((d.cues || []).join("\n"))}</textarea></label>
+      <label class="lab" for="exf-ct">Climbing transfer<input class="f" id="exf-ct" data-ff="climbingTransfer" data-list value="${esc((d.climbingTransfer || []).join(", "))}" placeholder="e.g. grip, lock-off, core tension"></label>
+      <label class="lab" style="grid-template-columns:auto 1fr;align-items:center" for="exf-uni"><input type="checkbox" id="exf-uni" data-ff="isUnilateral" ${d.isUnilateral ? "checked" : ""} style="width:22px;height:22px"> One side at a time</label>
+      <label class="lab" for="exf-src">Source (creator or link)<input class="f" id="exf-src" data-ff="source" value="${esc(d.source)}"></label>
+      <label class="lab" for="exf-notes">Notes<textarea class="f" id="exf-notes" data-ff="notes">${esc(d.notes)}</textarea></label>
+      <button class="btn primary big" data-a="exf-save">Save exercise</button>
+    </div>` });
+}
+function saveExerciseForm() {
+  const d = topSheet().data;
+  if (!String(d.name || "").trim()) { toast("Give the exercise a name."); return; }
+  const isNew = !d.id || !S.exercises[d.id];
+  if (isNew) { let base = "my-" + d.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), id = base, n = 2; while (S.exercises[id]) id = base + "-" + n++; d.id = id; d.isCustom = true; }
+  else if (!S.exercises[d.id].isCustom) d.edited = true;
+  S.exercises[d.id] = { primaryMuscles: [], secondaryMuscles: [], cues: [], climbingTransfer: [], ...d, name: d.name.trim() };
+  save(); sheets.pop();
+  const under = topSheet();
+  if (under?.pickTarget) { if (isNew && !under.data.picked.has(d.id)) { under.data.picked.add(d.id); under.data.order.push(d.id); } under.data.q = ""; }
+  else sheets.length = 0;
+  drawSheets(true); toast(isNew ? "Exercise added" : "Exercise updated");
+  render();
+}
+
+// ---------- creator import (AI draft) ----------
+function aiPrompt(d) {
+  return `Help me fill in an exercise card for my personal workout tracker. Reply with ONLY a JSON object and no other text, using these keys:
+name (string, clear common name), category (one of: strength, calisthenics, mobility, conditioning, climbing), logType (one of: weight_reps, bodyweight_reps, assisted_reps, weighted_bodyweight, duration, weighted_duration, distance_duration), primaryMuscles (array of strings), secondaryMuscles (array), equipment (string), cues (array of 3 to 5 short coaching cues), isUnilateral (boolean), climbingTransfer (array, e.g. "grip", "lock-off", "core tension", "shoulder stability"; empty if it doesn't help climbing), easier (string, an easier variation), harder (string, a harder variation), source (the creator's name if known, else "").
+You can't watch the video. Work from the link, title, channel and my notes. If you're unsure which exact exercise it is, make a sensible best guess and keep the cues general.
+
+Link: ${d.link || "(none)"}
+Video title: ${d.vtitle || "(unknown)"}
+Channel: ${d.channel || "(unknown)"}
+My notes: ${d.notes || "(none)"}`;
+}
+function parseDraft(text) {
+  const m = String(text || "").match(/\{[\s\S]*\}/); if (!m) throw new Error("no json");
+  const j = JSON.parse(m[0]);
+  const draft = { name: String(j.name || "").trim(), category: CATS[j.category] ? j.category : "strength", logType: LOGTYPES[j.logType] ? j.logType : "weight_reps",
+    primaryMuscles: [].concat(j.primaryMuscles || []).map(String), secondaryMuscles: [].concat(j.secondaryMuscles || []).map(String), equipment: String(j.equipment || ""),
+    cues: [].concat(j.cues || []).map(String).slice(0, 6), isUnilateral: !!j.isUnilateral, climbingTransfer: [].concat(j.climbingTransfer || []).map(String),
+    source: String(j.source || ""), notes: [j.easier ? "Easier: " + j.easier : "", j.harder ? "Harder: " + j.harder : ""].filter(Boolean).join("\n") };
+  return draft;
+}
+function creatorImport() {
+  const d = { link: "", notes: "", vtitle: "", channel: "", reply: "", busy: false, err: "" };
+  openSheet({ title: "From a creator", data: d, render: () => `<div class="form">
+    <p class="muted" style="margin:0">Paste a YouTube, Instagram or TikTok link, describe the exercise, or both. ${sampleFn ? "Claude drafts the card and you check it before saving." : "You'll copy a prompt into the Claude app and paste its reply back here."}</p>
+    <label class="lab" for="ci-link">Link<input class="f" id="ci-link" data-cf="link" value="${esc(d.link)}" inputmode="url" placeholder="https://youtube.com/…"></label>
+    ${d.vtitle ? `<div class="note">Video: ${esc(d.vtitle)}${d.channel ? " · " + esc(d.channel) : ""}</div>` : ""}
+    <label class="lab" for="ci-notes">What is it?<textarea class="f" id="ci-notes" data-cf="notes" placeholder="e.g. Jeff Nippard's lean-away cable lateral raise, done holding the machine with the other hand">${esc(d.notes)}</textarea></label>
+    ${d.err ? `<div class="note" style="color:var(--stop)">${esc(d.err)}</div>` : ""}
+    ${sampleFn ? `<button class="btn primary big" data-a="ci-draft" ${d.busy ? "disabled" : ""}>${d.busy ? "Drafting…" : "Draft with Claude"}</button>` : `
+      <button class="btn primary big" data-a="ci-copy">Copy prompt for Claude</button>
+      <label class="lab" for="ci-reply">Paste Claude's reply<textarea class="f" id="ci-reply" data-cf="reply" placeholder="{ &quot;name&quot;: … }">${esc(d.reply)}</textarea></label>
+      <button class="btn" data-a="ci-use">Use this reply</button>`}
+    <button class="btn ghost" data-a="ci-manual">Fill it in myself instead</button>
+  </div>` });
+}
+async function fetchVideoInfo(d) {
+  if (!/youtu\.?be/.test(d.link)) return;
+  try { const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(d.link)); if (r.ok) { const j = await r.json(); d.vtitle = j.title || ""; d.channel = j.author_name || ""; } } catch {}
+}
+
+// ---------- routines ----------
+function routineEditor(r) {
+  const d = r ? JSON.parse(JSON.stringify(r)) : { id: null, name: "", type: "workout", items: [] };
+  openSheet({ title: r ? "Edit routine" : "New routine", data: d, action: `<button data-a="rt-save">Save</button>`, render: () => `<div class="form">
+    <label class="lab" for="rt-name">Name<input class="f" id="rt-name" data-rf="name" value="${esc(d.name)}" placeholder="e.g. Pull day + grip"></label>
+    <div class="seg" role="group" aria-label="Routine type"><button data-a="rt-type" data-t="workout" aria-pressed="${d.type !== "mobility"}">Workout</button><button data-a="rt-type" data-t="mobility" aria-pressed="${d.type === "mobility"}">Guided mobility</button></div>
+    <div class="card list">${d.items.map((it, i) => { const e = ex(it.exerciseId), timed = isTimed(e.logType) || d.type === "mobility"; return `<div class="li" style="flex-wrap:wrap">
+      <span class="grow" style="flex-basis:60%"><span class="t">${esc(e.name)}</span><span class="s">${CATS[e.category]}</span></span>
+      <span class="stepper" aria-label="Sets"><button data-a="rt-sets" data-i="${i}" data-d="-1">−</button><span>${it.sets || 1}</span><button data-a="rt-sets" data-i="${i}" data-d="1">+</button></span>
+      <input class="cell" style="width:64px;flex:none" data-ri="${i}" data-rk="${timed ? "secs" : "reps"}" inputmode="numeric" value="${esc(timed ? it.secs ?? "" : it.reps ?? "")}" placeholder="${timed ? "secs" : "reps"}" aria-label="${timed ? "Seconds" : "Reps"}">
+      <span style="display:flex;gap:4px"><button class="more" data-a="rt-move" data-i="${i}" data-d="-1" aria-label="Move up">↑</button><button class="more" data-a="rt-move" data-i="${i}" data-d="1" aria-label="Move down">↓</button><button class="more" data-a="rt-rm" data-i="${i}" aria-label="Remove">✕</button></span>
+    </div>`; }).join("") || `<div class="empty">No exercises yet.</div>`}</div>
+    <button class="btn" data-a="rt-add">+ Add exercises</button>
+    <button class="btn primary big" data-a="rt-save">Save routine</button>
+    ${d.id ? `<button class="btn danger" data-a="rt-del">Delete routine</button>` : ""}
+  </div>` });
+}
+function routineFromWorkout(w) {
+  const r = { id: null, name: w.title || "Routine", type: "workout", items: w.exercises.map(we => { const e = ex(we.exerciseId), s = we.sets.filter(x => x.t !== "warmup"); return { exerciseId: we.exerciseId, sets: Math.max(1, s.length), reps: isTimed(e.logType) ? null : (s[0]?.reps || null), secs: isTimed(e.logType) ? (s[0]?.secs || null) : null, rest: we.rest }; }) };
+  routineEditor(null); Object.assign(topSheet().data, r); drawSheets();
+}
+
+// ---------- picker ----------
+function openPicker(title, onDone) {
+  const d = { q: "", cat: "all", climb: false, picked: new Set(), order: [] };
+  openSheet({ title, data: d, pickTarget: true, action: `<button data-a="pk-done">Add</button>`, render: () => `
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input class="f" id="pk-q" type="search" placeholder="Search exercises" value="${esc(d.q)}" aria-label="Search exercises"></div>
+    ${catChips(d.cat, d.climb, "pk")}
+    <div class="card list" id="pk-list">${pickerRows(d)}</div>
+    <div class="row-btns"><button class="btn" data-a="pk-new">Create new exercise</button><button class="btn primary" data-a="pk-done">Add ${d.picked.size || ""}</button></div>`, onDone });
+}
+function pickerRows(d) {
+  const q = d.q.trim().toLowerCase();
+  const list = allExercises().filter(e => (d.cat === "all" || e.category === d.cat || (d.cat === "custom" && e.isCustom)) && (!d.climb || e.climbingTransfer?.length) && (!q || (e.name + " " + (e.primaryMuscles || []).join(" ") + " " + (e.equipment || "")).toLowerCase().includes(q)));
+  return libRows(list, "pk-toggle", d.picked);
+}
+
+// ---------- progress ----------
+function viewProgress() {
+  const st = stats(), lv = levelOf(st.xp), target = S.settings.weeklyTarget;
+  const weeks = []; let k = weekKey(Date.now()); for (let i = 0; i < 12; i++) { weeks.unshift({ k, n: st.weeks[k] || 0 }); k = prevWeek(k); }
+  const maxN = Math.max(target, ...weeks.map(w => w.n), 1);
+  const all = [...S.workouts].sort((a, b) => b.start - a.start);
+  const W = 336, H = 150, pl = 22, pb = 22, bw = (W - pl) / 12;
+  return `
+  <div class="card lvl-card">
+    <div class="lvl-top"><div class="lvl-badge"><small>LEVEL</small><b>${lv.level}</b></div><div style="flex:1;min-width:0"><div style="font:800 24px/1.1 var(--f-display);font-variant-numeric:tabular-nums">${st.xp.toLocaleString("en-AU")} XP</div><div class="muted small">${(lv.need - lv.into).toLocaleString("en-AU")} XP to level ${lv.level + 1}</div></div></div>
+    <div class="bar" role="progressbar" aria-valuenow="${Math.round(lv.into / lv.need * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${lv.into / lv.need * 100}%"></i></div>
+    <div class="cats">${Object.entries(CATS).map(([c, l]) => { const cl = levelOf(st.cat[c] || 0); return `<div class="catrow cat-${c}"><span class="chip" style="font-size:14px;color:var(--ink)"><span class="dot"></span>${l}</span><span class="bar"><i style="width:${cl.into / cl.need * 100}%"></i></span><span>Lv ${cl.level}</span></div>`; }).join("")}</div>
+  </div>
+  <h3 class="sec">Weekly streak</h3>
+  <div class="card streak">
+    <div class="streak-top"><b>${st.streak}</b><span>${st.streak === 1 ? "week" : "weeks"} in a row · best ${st.bestStreak}</span></div>
+    <div class="weekdots" aria-label="${st.thisWeek} of ${target} sessions this week">${Array.from({ length: Math.max(target, st.thisWeek) }, (_, i) => `<i class="${i < st.thisWeek ? "on" : ""}"></i>`).join("")}<span class="muted small" style="margin-left:6px">${st.thisWeek}/${target} this week</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><span class="small muted">Rest days never break a streak. Hit your weekly target.</span><span class="stepper" aria-label="Weekly target"><button data-a="target" data-d="-1" aria-label="Fewer sessions">−</button><span>${target}</span><button data-a="target" data-d="1" aria-label="More sessions">+</button></span></div>
+  </div>
+  <h3 class="sec">Sessions per week</h3>
+  <div class="card chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sessions per week for the last 12 weeks">
+    ${[0, Math.ceil(maxN / 2), maxN].filter((v, i, a) => a.indexOf(v) === i).map(v => { const y = 8 + (1 - v / maxN) * (H - pb - 8); return `<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${pl - 6}" y="${y + 4}" font-size="10" text-anchor="end" fill="var(--ink-3)">${v}</text>`; }).join("")}
+    ${(() => { const y = 8 + (1 - target / maxN) * (H - pb - 8); return `<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--xp)" stroke-width="1.5" stroke-dasharray="4 4"/>`; })()}
+    ${weeks.map((w, i) => { const h = w.n / maxN * (H - pb - 8), x = pl + i * bw + 3; return `<rect x="${x}" y="${H - pb - h}" width="${bw - 6}" height="${Math.max(h, 0)}" rx="3" fill="${w.n >= target ? "var(--accent)" : "var(--accent-wash)"}"/>${i % 3 === 0 || i === 11 ? `<text x="${x + (bw - 6) / 2}" y="${H - 6}" font-size="10" text-anchor="middle" fill="var(--ink-3)">${i === 11 ? "Now" : new Date(w.k).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}</text>` : ""}`; }).join("")}
+  </svg><div class="small muted" style="padding:2px 2px 4px">Dashed line is your weekly target.</div></div>
+  <h3 class="sec">Achievements <span class="muted small" style="letter-spacing:0;text-transform:none">${Object.keys(st.unlocked).length} of ${ACH.length}</span></h3>
+  <div class="ach">${ACH.map(a => st.unlocked[a.id] ? `<div><b>${esc(a.name)}</b><span>${esc(a.desc)}</span><span class="when">${dateFmt(st.unlocked[a.id])}</span></div>` : `<div class="locked"><b>${esc(a.name)}</b><span>${esc(a.desc)}</span></div>`).join("")}</div>
+  <h3 class="sec">History <span class="muted small" style="letter-spacing:0;text-transform:none">${all.length} workouts</span></h3>
+  ${all.length ? `<div class="card list">${all.slice(0, UI.histN || 30).map(w => histRow(w, st)).join("")}</div>${all.length > (UI.histN || 30) ? `<button class="btn ghost" style="width:100%;margin-top:6px" data-a="hist-more">Show more</button>` : ""}` : `<div class="card empty"><strong>No history yet</strong>Finished workouts show up here.</div>`}`;
+}
+function historyDetail(id) {
+  const w = S.workouts.find(x => x.id === id); if (!w) return;
+  const st = stats();
+  openSheet({ title: w.title || "Workout", render: () => `
+    <div class="kv"><div><span>Date</span><b style="font-size:16px">${dateFmt(w.start)}</b></div><div><span>Duration</span><b>${w.end ? fmtSecs((w.end - w.start) / 1000) : "—"}</b></div><div><span>XP</span><b>+${st.wxp[w.id] || 0}</b></div></div>
+    ${w.notes ? `<div class="note">${esc(w.notes)}</div>` : ""}
+    ${w.exercises.map(we => { const e = ex(we.exerciseId); return `<div class="card" style="padding:12px 14px"><button class="name" style="border:0;background:none;padding:0;text-align:left" data-a="ex-open" data-id="${e.id}"><b style="font:750 17px/1.2 var(--f-display);color:var(--accent)">${esc(e.name)}</b></button>${we.note ? `<div class="small muted">${esc(we.note)}</div>` : ""}<ol style="margin:6px 0 0;padding-left:20px;font-variant-numeric:tabular-nums">${we.sets.filter(s => s.done).map(s => `<li>${s.t !== "normal" ? `<span class="pill" style="margin-right:6px">${s.t}</span>` : ""}${s.side ? s.side + " · " : ""}${esc(fmtSet(s, e.logType))}</li>`).join("")}</ol></div>`; }).join("")}
+    <div class="row-btns"><button class="btn" data-a="wk-save-routine" data-id="${w.id}">Save as routine</button><button class="btn danger" data-a="hist-del" data-id="${w.id}">Delete workout</button></div>` });
+}
+
+// ---------- more ----------
+function viewMore() {
+  return `
+  <h3 class="sec" style="margin-top:6px">Exercises</h3>
+  <div class="card list">
+    <button class="li" data-a="creator"><span class="grow"><span class="t">Add from a creator video</span><span class="s">Paste a link or describe it, Claude drafts the card</span></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="li" data-a="ex-new"><span class="grow"><span class="t">Create your own exercise</span><span class="s">Calisthenics, mobility, anything Hevy was missing</span></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg></button>
+  </div>
+  <h3 class="sec">Your data</h3>
+  <div class="card list">
+    <button class="li" data-a="hevy"><span class="grow"><span class="t">Import from Hevy</span><span class="s">Hevy app: Profile → Settings → Export & Import Data → Export workouts</span></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 6 6 6-6 6"/></svg></button>
+    <button class="li" data-a="backup-export"><span class="grow"><span class="t">Export a backup</span><span class="s">Everything, as one file you can keep in Files</span></span></button>
+    <label class="li" for="backup-in" style="cursor:pointer"><span class="grow"><span class="t">Restore from a backup</span><span class="s">Adds anything missing from a Chalkbook backup file</span></span></label>
+    <input type="file" id="backup-in" accept=".json,application/json" hidden>
+  </div>
+  <p class="small muted" style="margin:10px 2px 0">Your workouts are saved on this phone only. Export a backup every few weeks so you never lose them.</p>
+  <h3 class="sec">Settings</h3>
+  <div class="card" style="padding:14px;display:grid;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Default rest timer</span><span class="stepper"><button data-a="rest-def" data-d="-15" aria-label="Shorter">−</button><span style="min-width:44px">${fmtSecs(S.settings.rest)}</span><button data-a="rest-def" data-d="15" aria-label="Longer">+</button></span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span>Weekly session target</span><span class="stepper"><button data-a="target" data-d="-1" aria-label="Fewer">−</button><span>${S.settings.weeklyTarget}</span><button data-a="target" data-d="1" aria-label="More">+</button></span></div>
+  </div>
+  <p class="small muted" style="margin:16px 2px 0">Chalkbook · ${Object.keys(S.exercises).length} exercises · ${S.workouts.length} workouts</p>`;
+}
+
+// ---------- Hevy import ----------
+function parseCSV(text) {
+  text = text.replace(/^﻿/, ""); const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(x => x.trim() !== ""));
+}
+const MON = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+function parseDate(s) {
+  s = (s || "").trim(); let m;
+  if ((m = s.match(/^(\d{1,2})\s+([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{4}),?\s+(\d{1,2}):(\d{2})/))) return new Date(+m[3], MON[m[2].toLowerCase()], +m[1], +m[4], +m[5]).getTime();
+  if ((m = s.match(/^([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2}),?\s+(\d{4}),?\s+(\d{1,2}):(\d{2})\s*([ap]m)?/i))) { let h = +m[4]; if (m[6]) { if (/pm/i.test(m[6]) && h < 12) h += 12; if (/am/i.test(m[6]) && h === 12) h = 0; } return new Date(+m[3], MON[m[1].toLowerCase()], +m[2], h, +m[5]).getTime(); }
+  const t = Date.parse(s); return isNaN(t) ? null : t;
+}
+const normName = n => String(n || "").toLowerCase().replace(/\(([^)]*)\)/g, (_, inner) => /weight|assist|band/.test(inner) ? " " + inner : "").replace(/[^a-z0-9]/g, "");
+function hash(s) { let h = 5381; for (let i = 0; i < s.length; i++) h = (h * 33 ^ s.charCodeAt(i)) >>> 0; return h.toString(36); }
+function readHevy(text) {
+  const rows = parseCSV(text); if (rows.length < 2) throw new Error("This file looks empty.");
+  const head = rows[0].map(h => h.trim().toLowerCase()), col = n => head.indexOf(n);
+  if (col("exercise_title") < 0 || col("start_time") < 0) throw new Error("This doesn't look like a Hevy workouts export. Pick the workouts CSV from Hevy.");
+  const g = (r, n) => { const i = col(n); return i < 0 ? "" : (r[i] ?? "").trim(); };
+  const lbs = col("weight_lbs") >= 0 && col("weight_kg") < 0, miles = col("distance_miles") >= 0 && col("distance_km") < 0;
+  const workouts = new Map(), names = new Map();
+  for (const r of rows.slice(1)) {
+    const title = g(r, "title"), startS = g(r, "start_time"), exT = g(r, "exercise_title"); if (!exT || !startS) continue;
+    const key = title + "|" + startS;
+    let w = workouts.get(key);
+    if (!w) { const start = parseDate(startS); if (start == null) continue; w = { id: "hevy-" + hash(key), title: title || "Workout", start, end: parseDate(g(r, "end_time")) || null, notes: g(r, "description"), exercises: [], source: "hevy", _map: new Map() }; workouts.set(key, w); }
+    let we = w._map.get(exT); if (!we) { we = { name: exT, sets: [], rest: 0, note: g(r, "exercise_notes") }; w._map.set(exT, we); w.exercises.push(we); }
+    let kg = num(lbs ? g(r, "weight_lbs") : g(r, "weight_kg")); if (kg != null && lbs) kg = round(kg * 0.453592, 2);
+    let dist = num(miles ? g(r, "distance_miles") : g(r, "distance_km")); if (dist != null && miles) dist = round(dist * 1.609344, 3);
+    const st = g(r, "set_type").toLowerCase();
+    const s = { t: st.startsWith("warm") ? "warmup" : st.startsWith("drop") ? "drop" : st.startsWith("fail") ? "failure" : "normal", kg, reps: num(g(r, "reps")), secs: num(g(r, "duration_seconds")), dist, rpe: num(g(r, "rpe")), side: null, done: true };
+    we.sets.push(s);
+    const nm = names.get(exT) || { name: exT, sets: 0, kg: 0, reps: 0, secs: 0, dist: 0 }; nm.sets++; if (kg) nm.kg++; if (s.reps) nm.reps++; if (s.secs) nm.secs++; if (dist) nm.dist++; names.set(exT, nm);
+  }
+  const ws = [...workouts.values()]; ws.forEach(w => delete w._map);
+  return { workouts: ws, names: [...names.values()] };
+}
+function guessLogType(n) {
+  const lo = n.name.toLowerCase();
+  if (n.dist) return "distance_duration";
+  if (/assist/.test(lo)) return "assisted_reps";
+  if (/weighted/.test(lo) && n.reps) return "weighted_bodyweight";
+  if (n.secs && n.kg) return "weighted_duration";
+  if (n.secs && !n.reps) return "duration";
+  if (n.kg && n.reps) return "weight_reps";
+  return "bodyweight_reps";
+}
+function matchName(name) {
+  if (S.hevyMap[name] && S.exercises[S.hevyMap[name]]) return S.hevyMap[name];
+  const n = normName(name); if (!n) return null;
+  for (const e of Object.values(S.exercises)) if (normName(e.name) === n) return e.id;
+  return null;
+}
+function hevyImport() {
+  const d = { stage: "pick", err: "", data: null, map: {} };
+  openSheet({ title: "Import from Hevy", data: d, render: () => {
+    if (d.stage === "pick") return `
+      <ol class="cues"><li>In Hevy, open Profile, then Settings.</li><li>Tap Export & Import Data, then Export workouts. Save the CSV to Files.</li><li>Pick that file below.</li></ol>
+      ${d.err ? `<div class="note" style="color:var(--stop)">${esc(d.err)}</div>` : ""}
+      <label class="btn primary big" for="hevy-file" style="cursor:pointer">Choose Hevy CSV</label><input type="file" id="hevy-file" accept=".csv,text/csv" hidden>
+      <p class="small muted" style="margin:0">Importing again later is safe. Workouts already here are skipped.</p>`;
+    const { workouts, names } = d.data, fresh = workouts.filter(w => !S.workouts.some(x => x.id === w.id));
+    const unmatched = names.filter(n => !matchName(n.name)), matched = names.length - unmatched.length;
+    const span = workouts.length ? `${dateFmt(Math.min(...workouts.map(w => w.start)))} to ${dateFmt(Math.max(...workouts.map(w => w.start)))}` : "";
+    return `
+      <div class="kv"><div><span>Workouts found</span><b>${workouts.length}</b></div><div><span>New to import</span><b>${fresh.length}</b></div><div><span>Exercises matched</span><b>${matched}</b></div><div><span>New exercises</span><b>${unmatched.length}</b></div></div>
+      ${span ? `<p class="muted small" style="margin:0">${span}</p>` : ""}
+      ${unmatched.length ? `<div><h3>Exercises not in your library</h3><p class="small muted" style="margin:6px 0 10px">Each one will be added as your own exercise. To merge one into an existing exercise instead, type or pick its name.</p>
+        <datalist id="ex-names">${allExercises().map(e => `<option value="${esc(e.name)}"></option>`).join("")}</datalist>
+        <div class="card list">${unmatched.map((n, i) => `<div class="li" style="display:grid;gap:6px"><span><span class="t">${esc(n.name)}</span><span class="s">${n.sets} ${n.sets === 1 ? "set" : "sets"} · ${LOGTYPES[guessLogType(n)]}</span></span><input class="f" list="ex-names" data-hm="${i}" value="${esc(d.map[n.name] || "")}" placeholder="Add as new exercise" aria-label="Merge ${esc(n.name)} into"></div>`).join("")}</div></div>` : ""}
+      <button class="btn primary big" data-a="hevy-go" ${fresh.length ? "" : "disabled"}>${fresh.length ? `Import ${fresh.length} workouts` : "Everything is already imported"}</button>`;
+  } });
+}
+function hevyCommit() {
+  const d = topSheet().data, { workouts, names } = d.data;
+  const byName = {}; Object.values(S.exercises).forEach(e => byName[e.name.toLowerCase()] = e.id);
+  let created = 0;
+  for (const n of names) {
+    let id = matchName(n.name);
+    const want = (d.map[n.name] || "").trim().toLowerCase();
+    if (!id && want && byName[want]) id = byName[want];
+    if (!id) {
+      const base = "hevy-" + n.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); id = base; let k = 2; while (S.exercises[id]) id = base + "-" + k++;
+      const lt = guessLogType(n);
+      S.exercises[id] = { id, name: n.name, category: lt === "distance_duration" ? "conditioning" : "strength", logType: lt, primaryMuscles: [], secondaryMuscles: [], equipment: "", cues: [], isUnilateral: false, climbingTransfer: [], isCustom: true, source: "Imported from Hevy", notes: "" };
+      created++;
+    }
+    S.hevyMap[n.name] = id;
+  }
+  let added = 0;
+  for (const w of workouts) {
+    if (S.workouts.some(x => x.id === w.id)) continue;
+    w.exercises = w.exercises.map(we => ({ exerciseId: S.hevyMap[we.name], sets: we.sets, rest: 0, note: we.note || "" }));
+    S.workouts.push(w); added++;
+  }
+  save(); sheets.length = 0; drawSheets(); render();
+  toast(`Imported ${added} workouts${created ? ` and ${created} exercises` : ""}.`);
+}
+
+// ---------- backup ----------
+async function exportBackup() {
+  const data = JSON.stringify({ app: "chalkbook", exported: new Date().toISOString(), state: { ...S, active: null } });
+  const name = `chalkbook-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  if (downloadsApi) { try { await downloadsApi.save({ filename: name, data: new Blob([data], { type: "application/json" }) }); toast("Backup saved"); return; } catch (e) { if (e?.code === "declined") return; } }
+  try { const file = new File([data], name, { type: "application/json" }); if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: "Chalkbook backup" }); return; } } catch (e) { if (e?.name === "AbortError") return; }
+  try { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([data], { type: "application/json" })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast("Backup downloaded"); }
+  catch { toast("This view can't save files. Open Chalkbook from your home screen to export."); }
+}
+function restoreBackup(text) {
+  let d; try { d = JSON.parse(text); } catch { toast("That file isn't a Chalkbook backup."); return; }
+  const b = d?.state; if (!b || !Array.isArray(b.workouts)) { toast("That file isn't a Chalkbook backup."); return; }
+  let nw = 0, ne = 0, nr = 0;
+  for (const [id, e] of Object.entries(b.exercises || {})) if (!S.exercises[id] || e.isCustom || e.edited) { if (!S.exercises[id]) ne++; S.exercises[id] = e; }
+  for (const w of b.workouts) if (!S.workouts.some(x => x.id === w.id)) { S.workouts.push(w); nw++; }
+  for (const r of b.routines || []) if (!S.routines.some(x => x.id === r.id)) { S.routines.push(r); nr++; }
+  Object.assign(S.hevyMap, b.hevyMap || {}); Object.assign(S.ladderPos, b.ladderPos || {});
+  if (b.settings) S.settings = Object.assign(S.settings, b.settings);
+  save(); render(); toast(`Restored ${nw} workouts, ${ne} exercises, ${nr} routines.`);
+}
+
+// ---------- sheets ----------
+const sheets = [];
+const topSheet = () => sheets[sheets.length - 1];
+function openSheet(spec) { sheets.push(spec); drawSheets(true); }
+function closeSheet() { sheets.pop(); drawSheets(true); }
+function drawSheets(fresh) {
+  const root = $("#sheets");
+  if (!sheets.length) { root.innerHTML = ""; root.hidden = true; if (!OV) document.body.classList.remove("locked"); return; }
+  const s = topSheet(), prevScroll = !fresh ? root.querySelector(".sheet-b")?.scrollTop : 0;
+  root.hidden = false; document.body.classList.add("locked");
+  root.innerHTML = `<div class="scrim" data-a="sheet-close"></div><section class="sheet" role="dialog" aria-modal="true" aria-label="${esc(s.title)}"><header class="sheet-h"><button class="ghost" data-a="sheet-close">${sheets.length > 1 ? "Back" : "Close"}</button><h2>${esc(s.title)}</h2><span class="sheet-x">${s.action || ""}</span></header><div class="sheet-b">${s.render()}</div></section>`;
+  if (prevScroll) root.querySelector(".sheet-b").scrollTop = prevScroll;
+}
+function confirmSheet(title, body, ok, danger) {
+  return new Promise(res => {
+    openSheet({ title, resolve: res, render: () => `<p style="margin:0">${esc(body)}</p><div class="row-btns"><button class="btn" data-a="cf-no">Cancel</button><button class="btn ${danger ? "danger" : "primary"}" data-a="cf-yes">${esc(ok)}</button></div>` });
+  });
+}
+function menuSheet(title, items) {
+  openSheet({ title, items, render: () => `<div class="card list">${items.map((it, i) => `<button class="li" data-a="menu-pick" data-i="${i}"><span class="grow"><span class="t" style="${it.danger ? "color:var(--stop)" : ""}">${esc(it.label)}</span>${it.sub ? `<span class="s">${esc(it.sub)}</span>` : ""}</span></button>`).join("")}</div>` });
+}
+
+// ---------- actions ----------
+const A = {
+  tab(el) { UI.tab = el.dataset.tab; try { localStorage.setItem("chalkbook.tab", UI.tab); } catch {} sheets.length = 0; drawSheets(); render(); window.scrollTo(0, 0); },
+  "sheet-close"() { const s = topSheet(); if (s?.resolve) { s.resolve(false); } closeSheet(); },
+  "cf-yes"() { const s = topSheet(); sheets.pop(); drawSheets(true); s.resolve(true); },
+  "cf-no"() { const s = topSheet(); sheets.pop(); drawSheets(true); s.resolve(false); },
+  "menu-pick"(el) { const it = topSheet().items[+el.dataset.i]; closeSheet(); it.run(); },
+  "start-empty"() { if (S.active) { UI.tab = "train"; render(); return; } newWorkout(); },
+  "routine-start"(el) { const r = S.routines.find(x => x.id === el.dataset.id); if (!r) return; if (r.type === "mobility") return startGuided(r); if (S.active) { toast("Finish or discard your current workout first."); UI.tab = "train"; render(); return; } newWorkout(r.name, r.items); },
+  "routine-log"(el) { const r = S.routines.find(x => x.id === el.dataset.id); if (!r) return; if (S.active) { toast("Finish or discard your current workout first."); return; } newWorkout(r.name, r.items); },
+  "routine-edit"(el) { routineEditor(S.routines.find(x => x.id === el.dataset.id)); },
+  "routine-new"() { routineEditor(null); },
+  "rt-type"(el) { topSheet().data.type = el.dataset.t; drawSheets(); },
+  "rt-sets"(el) { const it = topSheet().data.items[+el.dataset.i]; it.sets = Math.max(1, Math.min(10, (it.sets || 1) + +el.dataset.d)); drawSheets(); },
+  "rt-move"(el) { const a = topSheet().data.items, i = +el.dataset.i, j = i + +el.dataset.d; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; drawSheets(); },
+  "rt-rm"(el) { topSheet().data.items.splice(+el.dataset.i, 1); drawSheets(); },
+  "rt-add"() { const d = topSheet().data; openPicker("Add to routine", ids => { ids.forEach(id => { const e = ex(id); d.items.push({ exerciseId: id, sets: d.type === "mobility" ? 1 : 3, secs: isTimed(e.logType) || d.type === "mobility" ? (d.type === "mobility" ? 45 : 20) : null, reps: isTimed(e.logType) || d.type === "mobility" ? null : 8, perSide: e.isUnilateral }); }); }); },
+  "rt-save"() { const d = topSheet().data; if (!d.name.trim()) { toast("Name the routine first."); return; } if (!d.items.length) { toast("Add at least one exercise."); return; } if (d.id) { const i = S.routines.findIndex(r => r.id === d.id); S.routines[i] = d; } else { d.id = uid(); S.routines.push(d); } save(); sheets.length = 0; drawSheets(); UI.tab = "train"; render(); toast("Routine saved"); },
+  async "rt-del"() { const d = topSheet().data; if (await confirmSheet("Delete routine?", `"${d.name}" will be removed. Your logged workouts stay.`, "Delete", true)) { S.routines = S.routines.filter(r => r.id !== d.id); save(); sheets.length = 0; drawSheets(); render(); } },
+  "pick-for-workout"() { openPicker("Add exercises", ids => { ids.forEach(id => addExerciseToActive(id)); save(); render(); }); },
+  "pk-toggle"(el) { const d = topSheet().data, id = el.dataset.id; if (d.picked.has(id)) { d.picked.delete(id); d.order = d.order.filter(x => x !== id); } else { d.picked.add(id); d.order.push(id); } el.setAttribute("aria-pressed", d.picked.has(id)); document.querySelectorAll('[data-a="pk-done"]').forEach(b => { if (b.classList.contains("btn")) b.textContent = "Add " + (d.picked.size || ""); }); },
+  "pk-done"() { const s = topSheet(), ids = [...s.data.order]; if (!ids.length) { toast("Tap exercises to select them."); return; } sheets.pop(); s.onDone(ids); drawSheets(true); },
+  "pk-cat"(el) { const d = topSheet().data; d.cat = el.dataset.cat; drawSheets(); },
+  "pk-climb"() { const d = topSheet().data; d.climb = !d.climb; drawSheets(); },
+  "pk-new"() { exerciseForm({ name: topSheet().data.q, category: "calisthenics", logType: "bodyweight_reps", cues: [] }); },
+  "set-type"(el) { const s = S.active.exercises[+el.dataset.ei].sets[+el.dataset.si]; s.t = SET_TYPES[(SET_TYPES.indexOf(s.t) + 1) % SET_TYPES.length]; save(); render(); },
+  "set-side"(el) { const s = S.active.exercises[+el.dataset.ei].sets[+el.dataset.si]; s.side = s.side == null ? "L" : s.side === "L" ? "R" : null; save(); render(); },
+  "set-done"(el) { completeSet(+el.dataset.ei, +el.dataset.si); },
+  "set-add"(el) { const we = S.active.exercises[+el.dataset.ei], last = we.sets[we.sets.length - 1]; we.sets.push({ t: "normal", kg: last?.kg ?? null, reps: null, secs: null, dist: null, side: last?.side === "L" ? "R" : last?.side === "R" ? "L" : null, done: false }); save(); render(); },
+  "set-del"(el) { const we = S.active.exercises[+el.dataset.ei]; if (we.sets.length) we.sets.pop(); save(); render(); },
+  hold(el) { openHold(+el.dataset.ei, +el.dataset.si); },
+  "hold-done"() { if (!OV) return; const secs = OV.start ? Math.round((Date.now() - OV.start) / 1000) : 0; const { ei, si } = OV; OV = null; drawOverlay(); if (!secs) return; S.active.exercises[ei].sets[si].secs = secs; completeSet(ei, si, true); },
+  "ov-cancel"() { if (OV?.kind === "guided" && OV.log.length) { finishGuided(); return; } OV = null; drawOverlay(); if (!S.active) keepAwake(false); },
+  "gd-pause"() { if (!OV) return; if (OV.paused != null) { OV.phaseEnd = Date.now() + OV.paused; OV.paused = null; } else { OV.paused = OV.phaseEnd - Date.now(); } tickOverlay(); },
+  "gd-skip"() { if (!OV) return; OV.paused = null; gdNext(); tickOverlay(); },
+  "gd-back"() { if (!OV) return; OV.i = Math.max(0, OV.i - 1); OV.log = OV.log.filter(x => x < OV.i); OV.phase = "ready"; OV.paused = null; OV.phaseEnd = Date.now() + 4000; tickOverlay(); },
+  "rest-adj"(el) { const r = S.active?.rest; if (!r) return; r.end += +el.dataset.d * 1000; r.total = Math.max(r.total, (r.end - Date.now()) / 1000); save(); renderRest(); },
+  "rest-skip"() { if (S.active) { S.active.rest = null; save(); renderRest(); } },
+  "ex-menu"(el) {
+    const ei = +el.dataset.ei, we = S.active.exercises[ei];
+    menuSheet(ex(we.exerciseId).name, [
+      ...[0, 60, 90, 120, 180].map(s => ({ label: s ? `Rest timer ${fmtSecs(s)}` : "No rest timer", sub: we.rest === s ? "Current" : "", run: () => { we.rest = s; save(); render(); } })),
+      { label: "Move up", run: () => { if (ei > 0) { const a = S.active.exercises; [a[ei - 1], a[ei]] = [a[ei], a[ei - 1]]; save(); render(); } } },
+      { label: "Move down", run: () => { const a = S.active.exercises; if (ei < a.length - 1) { [a[ei + 1], a[ei]] = [a[ei], a[ei + 1]]; save(); render(); } } },
+      { label: "Exercise info", run: () => A["ex-open"]({ dataset: { id: we.exerciseId } }) },
+      { label: "Remove exercise", danger: true, run: () => { S.active.exercises.splice(ei, 1); save(); render(); } }
+    ]);
+  },
+  async "wk-finish"() { await finishWorkout(); },
+  async "wk-discard"() { if (await confirmSheet("Discard workout?", "Everything logged in this workout will be lost.", "Discard", true)) { S.active = null; save(); keepAwake(false); render(); } },
+  "wk-save-routine"(el) { const w = S.workouts.find(x => x.id === el.dataset.id); if (w) { sheets.length = 0; routineFromWorkout(w); } },
+  "hist-open"(el) { historyDetail(el.dataset.id); },
+  "hist-more"() { UI.histN = (UI.histN || 30) + 50; render(); },
+  async "hist-del"(el) { const id = el.dataset.id; if (await confirmSheet("Delete workout?", "This removes it from your history and XP. It can't be undone.", "Delete", true)) { S.workouts = S.workouts.filter(w => w.id !== id); save(); sheets.length = 0; drawSheets(); render(); } },
+  "ex-open"(el) { const e = ex(el.dataset.id); openSheet({ title: e.name, render: () => exerciseDetail(e.id) }); },
+  "ex-add-active"(el) { addExerciseToActive(el.dataset.id); save(); sheets.length = 0; drawSheets(); UI.tab = "train"; render(); toast("Added to workout"); },
+  "ex-edit"(el) { exerciseForm(JSON.parse(JSON.stringify(ex(el.dataset.id)))); },
+  "ex-dup"(el) { const d = JSON.parse(JSON.stringify(ex(el.dataset.id))); d.id = null; d.name += " (variation)"; d.isCustom = true; d.edited = false; d.ladderId = null; d.ladderStep = null; exerciseForm(d, { title: "New variation" }); },
+  async "ex-del"(el) { const id = el.dataset.id, used = S.workouts.some(w => w.exercises.some(x => x.exerciseId === id)); if (await confirmSheet("Delete exercise?", used ? "It's in your history, so past workouts will show it as an unknown exercise." : "This removes it from your library.", "Delete", true)) { delete S.exercises[id]; save(); sheets.length = 0; drawSheets(); render(); } },
+  "ex-new"() { exerciseForm({ name: "", category: "calisthenics", logType: "bodyweight_reps", cues: [] }); },
+  "exf-save"() { saveExerciseForm(); },
+  "lib-add"() { menuSheet("Add exercise", [{ label: "From a creator video", sub: "Claude drafts it from a link or description", run: creatorImport }, { label: "Create my own", sub: "Fill in the details yourself", run: () => A["ex-new"]() }]); },
+  "lib-seg"(el) { UI.libSeg = el.dataset.seg; render(); },
+  "lib-cat"(el) { UI.cat = el.dataset.cat; render(); },
+  "lib-climb"() { UI.climb = !UI.climb; render(); },
+  "ladder-set"(el) { S.ladderPos[el.dataset.l] = +el.dataset.p; save(); render(); },
+  creator() { creatorImport(); },
+  async "ci-draft"() {
+    const d = topSheet().data; if (!d.link.trim() && !d.notes.trim()) { toast("Paste a link or describe the exercise."); return; }
+    d.busy = true; d.err = ""; drawSheets();
+    await fetchVideoInfo(d);
+    try { const res = await sampleFn(aiPrompt(d), { modelTier: "quick" }); const draft = parseDraft(res.text); if (!draft.source) draft.source = d.channel || d.link; else if (d.link) draft.source += " · " + d.link; d.busy = false; exerciseForm(draft, { aiDraft: true, title: "Check the draft" }); }
+    catch (e) { d.busy = false; d.err = e?.code === "not_granted" ? "Claude wasn't allowed to help in this view. You can still fill it in yourself." : e?.code === "rate_limited" ? "Too many requests just now. Wait a minute and try again." : "Couldn't get a draft. Try again, or fill it in yourself."; drawSheets(); }
+  },
+  async "ci-copy"() {
+    const d = topSheet().data; if (!d.link.trim() && !d.notes.trim()) { toast("Paste a link or describe the exercise."); return; }
+    await fetchVideoInfo(d); const p = aiPrompt(d);
+    try { await navigator.clipboard.writeText(p); toast("Prompt copied. Paste it into the Claude app."); }
+    catch { d.reply = p; drawSheets(); toast("Couldn't copy. The prompt is in the box, select and copy it."); }
+    drawSheets();
+  },
+  "ci-use"() { const d = topSheet().data; try { const draft = parseDraft(d.reply); if (!draft.source && d.link) draft.source = d.link; exerciseForm(draft, { aiDraft: true, title: "Check the draft" }); } catch { d.err = "That reply didn't contain an exercise card. Copy Claude's whole reply and try again."; drawSheets(); } },
+  "ci-manual"() { const d = topSheet().data; exerciseForm({ name: "", category: "strength", logType: "weight_reps", cues: [], source: d.link, notes: d.notes }); },
+  hevy() { hevyImport(); },
+  "hevy-go"() { hevyCommit(); },
+  "backup-export"() { exportBackup(); },
+  target(el) { S.settings.weeklyTarget = Math.max(1, Math.min(14, S.settings.weeklyTarget + +el.dataset.d)); save(); render(); },
+  "rest-def"(el) { S.settings.rest = Math.max(0, Math.min(600, S.settings.rest + +el.dataset.d)); save(); render(); }
+};
+document.addEventListener("click", e => { const el = e.target.closest("[data-a]"); if (!el) return; const f = A[el.dataset.a]; if (f) { e.preventDefault(); unlockAudio(); f(el, e); } });
+document.addEventListener("input", e => {
+  const el = e.target, d = topSheet()?.data;
+  if (el.dataset.f && S.active) { const s = S.active.exercises[+el.dataset.ei]?.sets[+el.dataset.si]; if (!s) return; const v = num(el.value); if (el.dataset.f === "mins") s.secs = v == null ? null : Math.round(v * 60); else s[el.dataset.f] = v; save(); return; }
+  if (el.dataset.w === "title" && S.active) { S.active.title = el.value; save(); return; }
+  if (el.dataset.note != null && S.active) { S.active.exercises[+el.dataset.note].note = el.value; save(); return; }
+  if (el.id === "lib-q") { UI.q = el.value; $("#lib-list").innerHTML = libRows(filteredExercises(), "ex-open"); return; }
+  if (el.id === "pk-q" && d) { d.q = el.value; $("#pk-list").innerHTML = pickerRows(d); return; }
+  if (el.dataset.ff && d) { const k = el.dataset.ff; d[k] = el.type === "checkbox" ? el.checked : el.dataset.list != null ? el.value.split(",").map(x => x.trim()).filter(Boolean) : el.dataset.lines != null ? el.value.split("\n").map(x => x.trim()).filter(Boolean) : el.value; return; }
+  if (el.dataset.cf && d) { d[el.dataset.cf] = el.value; return; }
+  if (el.dataset.rf && d) { d[el.dataset.rf] = el.value; return; }
+  if (el.dataset.ri != null && d) { d.items[+el.dataset.ri][el.dataset.rk] = num(el.value); return; }
+  if (el.dataset.hm != null && d) { const n = d.data.names.filter(x => !matchName(x.name))[+el.dataset.hm]; if (n) d.map[n.name] = el.value; return; }
+});
+document.addEventListener("change", async e => {
+  const el = e.target;
+  if (el.dataset.ff && topSheet()?.data && el.tagName === "SELECT") { topSheet().data[el.dataset.ff] = el.value; return; }
+  if (el.id === "hevy-file" && el.files?.[0]) { const d = topSheet().data; try { d.data = readHevy(await el.files[0].text()); d.stage = "review"; d.err = ""; } catch (err) { d.err = err.message || "Couldn't read that file."; } drawSheets(true); return; }
+  if (el.id === "backup-in" && el.files?.[0]) { restoreBackup(await el.files[0].text()); el.value = ""; }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && sheets.length) A["sheet-close"](); if (e.key === "Enter" && e.target.classList?.contains("cell")) e.target.blur(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { if (S.active || OV) keepAwake(true); tick(); } });
+document.addEventListener("focusin", e => { if (e.target.classList?.contains("cell")) e.target.select?.(); });
+
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+load().then(() => { render(); if (S.active) keepAwake(true); });
+</script>
+</body>
+</html>
